@@ -6,13 +6,15 @@ from buttons import RectButton
 pygame.init()
 pygame.mixer.init()
 
-G = 0.2
+G = 0.05
 
 WW, WH = 480, 640
 window = pygame.display.set_mode((WW, WH))
 
 SW, SH = 240, 320
 screen = pygame.Surface((SW, SH)).convert()
+vig = pygame.image.load(os.path.join("Vig.png")).convert_alpha()
+BnB = pygame.image.load(os.path.join("BeatNBoom.png")).convert_alpha()
 
 clock = pygame.time.Clock()
 
@@ -42,16 +44,15 @@ def game():
 
     ## WINDOW
     visible_area = pygame.Rect(0, 0, SW, SH)
-    vig = pygame.image.load(os.path.join("Vig.png")).convert_alpha()
     scroll = vec(0, 0)
     shake = 0
-    back_color = pygame.Color(255, 140, 97)
+    back_color = pygame.Color(100, 75, 60)
 
     ## PLAYER
     player_img = pygame.image.load("player.png").convert_alpha()
     player_rect = player_img.get_rect(center=(SW//2, SH//4))
     player_vel = vec()
-    player_max_vel_y = 5
+    player_max_vel_y = 10
     score = 0
     score_increment = 10
 
@@ -83,10 +84,18 @@ def game():
         circles.append(
             [
                 vec(random.randint(50, SW-50), random.randint(0, SH)),      # POSITION
-                random.randint(0, 25),                                      # RADIUS
-                random.randint(5, 10)                                       # PARALLAX FACTOR(?)
+                random.randint(5, 25),                                      # RADIUS
+                0                                                           # PARALLAX FACTOR(?)
             ]
         )
+
+    ## TRANSITIONS STUFF
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2.bottom = SH
 
     start_ticks = pygame.time.get_ticks()
     frame, beat_index = 0, 0
@@ -108,7 +117,8 @@ def game():
                 return "exit"
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return "menu"
+                    if not transitioning:
+                        tr_close_start = True
                 if event.key == pygame.K_LEFT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[1]:
@@ -137,7 +147,6 @@ def game():
 
         ## UPDATING
         # player
-        player_max_vel_y += 0.001
         player_vel.y += G
         player_rect.x += player_vel.x
         player_rect.y += player_vel.y
@@ -157,7 +166,7 @@ def game():
             if pick[1].colliderect(player_rect):
                 score += score_increment
                 sfx_crash.play()
-                shake = 5
+                shake = 10
                 back_color.r = random.randint(50, 100)
                 back_color.g = random.randint(50, 100)
                 back_color.b = random.randint(50, 100)
@@ -167,12 +176,34 @@ def game():
                 pickups.pop(i)
         # others
         visible_area.center = (player_rect.centerx, player_rect.centery + 100)
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                return "menu"
 
         ## DRAWING
         for c in circles:
+            c[2] = c[1]/2
             if c[0].y-scroll.y//c[2] < -c[1]*2:
                 c[0].y += SH+c[1]*4
             c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
+
         score_txt = game_font.render("SCORE: "+str(score), False, (255, 255, 255)).convert_alpha()
         screen.blit(score_txt, (SW//2 - score_txt.get_rect().width//2, 0))
 
@@ -187,6 +218,9 @@ def game():
             screen.blit(pick[0], (pick[1].x - scroll.x, pick[1].y - scroll.y))
         # screen.blit(pick_img1, (obs_rect.x - scroll.x, obs_rect.y - scroll.y))
 
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+
         screen.blit(vig, (0, 0))
         window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
         clock.tick(45)
@@ -194,7 +228,7 @@ def game():
 
 def menu():
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+    # title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
 
     ## MUSIC DATA
     with open("music_data.json") as jfile:
@@ -224,13 +258,22 @@ def menu():
     for i in range(100):
         circles.append(
             [
-                vec(random.randint(50, SW-50), random.randint(0, SH)),          # POSITION
-                random.randint(0, 25),                                      # RADIUS
-                random.randint(5, 10)                                       # PARALLAX FACTOR(?)
+                vec(random.randint(50, SW-50), random.randint(0, SH)),      # POSITION
+                random.randint(5, 25),                                      # RADIUS
+                0                                                           # PARALLAX FACTOR(?)
             ]
         )
 
-    play_button = RectButton(vec(SW//2, SH//2), vec(100, 25), "PLAY")
+    play_button = RectButton(vec(SW//2, 2*SH//3), vec(100, 25), "PLAY")
+    settings_button = RectButton(vec(SW//2, 3*SH//4), vec(100, 25), "SETTINGS")
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2.bottom = SH
+    tr_go_to = "game"
 
     while True:
         scroll.y += 5
@@ -244,31 +287,172 @@ def menu():
                 back_color.r = random.randint(50, 100)
                 back_color.g = random.randint(50, 100)
                 back_color.b = random.randint(50, 100)
-                
-        if play_button.clicked():
-            return "game"
+
+        if play_button.clicked() and not transitioning:
+            tr_go_to = "game"
+            tr_close_start = True
+
+        if settings_button.clicked() and not transitioning:
+            tr_go_to = "settings"
+            tr_close_start = True
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                if tr_go_to == "game":
+                    return "game"
+                elif tr_go_to == "settings":
+                    return "settings"
 
         ## drawing
         for c in circles:
+            c[2] = c[1]/2
             if c[0].y-scroll.y//c[2] < -c[1]*2:
                 c[0].y += SH+c[1]*4
             c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
 
-        title_txt1 = title_font.render("BEAT", False, (255, 255, 255)).convert_alpha()
-        screen.blit(title_txt1, (SW//2-title_txt1.get_width()//2, 20))
+        screen.blit(BnB, (SW//2-BnB.get_width()//2, 10))
+        #
+        # title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
+        # screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
 
-        title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
-        screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
+        play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        settings_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
 
-        play_button.draw(screen, (255, 255, 255), (255, 140, 97), (255, 140, 97), (0, 0, 0))
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
 
         ## WINDOW UPDATING
+        screen.blit(vig, (0, 0))
         window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
         clock.tick(45)
         pygame.display.update()
 
-def exit():
-    return
+def settings():
+    ## FONTS
+    # title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+
+    ## MUSIC DATA
+    with open("music_data.json") as jfile:
+        music_data = json.load(jfile)
+
+    music_name = music_data["music_name"]
+    beat_times = music_data["beat_times"]
+    tempo = music_data["tempo"]
+
+    ## MUSIC STUFF
+    pygame.mixer.music.load(music_name)
+    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.play(loops=-1)
+
+    ## BEAT STUFF
+    BEAT_EVENT = pygame.USEREVENT + 1
+    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+
+    ## WINDOW STUFF
+    scroll = vec()
+    back_color = pygame.Color(155, 100, 100)
+
+    ## BACK CIRCLES
+    circles = []
+    circle_color = pygame.Color(255, 255, 255)
+    for i in range(100):
+        circles.append(
+            [
+                vec(random.randint(50, SW-50), random.randint(0, SH)),      # POSITION
+                random.randint(5, 25),                                      # RADIUS
+                0                                                           # PARALLAX FACTOR(?)
+            ]
+        )
+
+    back_button = RectButton(vec(SW//2, SH-25), vec(100, 25), "BACK")
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2.bottom = SH
+    tr_go_to = "menu"
+
+    while True:
+        scroll.y += 5
+        screen.fill(back_color)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                return "exit"
+            if event.type == BEAT_EVENT:
+                back_color.r = random.randint(50, 100)
+                back_color.g = random.randint(50, 100)
+                back_color.b = random.randint(50, 100)
+
+        ## CLICKS
+        if back_button.clicked() and not transitioning:
+            tr_go_to = "menu"
+            tr_close_start = True
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                if tr_go_to == "menu":
+                    return "menu"
+
+        ## drawing
+        for c in circles:
+            c[2] = c[1]/2
+            if c[0].y-scroll.y//c[2] < -c[1]*2:
+                c[0].y += SH+c[1]*4
+            c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
+
+        back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+
+        #
+        # title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
+        # screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
+
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+
+        ## WINDOW UPDATING
+        screen.blit(vig, (0, 0))
+        window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        clock.tick(45)
+        pygame.display.update()
 
 scene = "menu"
 
@@ -277,6 +461,7 @@ while True:
         scene = menu()
     elif scene == "game":
         scene = game()
+    elif scene == "settings":
+        scene = settings()
     elif scene == "exit":
-        scene = exit()
         break
