@@ -246,7 +246,7 @@ def menu():
 
     ## MUSIC STUFF
     pygame.mixer.music.load(music_name)
-    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.set_volume(data["volume"]/100)
     pygame.mixer.music.play(loops=-1)
 
     ## BEAT STUFF
@@ -371,7 +371,7 @@ def settings():
 
     ## MUSIC STUFF
     pygame.mixer.music.load(music_name)
-    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.set_volume(data["volume"]/100)
     pygame.mixer.music.play(loops=-1)
 
     ## BEAT STUFF
@@ -471,6 +471,7 @@ def settings():
 
         to_write["volume"] = volume_slider.percent
         to_write["back_change"] = back_changing.checked
+        pygame.mixer.music.set_volume(volume_slider.percent/100)
 
         title_txt = title_font.render("SETTINGS", False, (255, 255, 255))
         screen.blit(title_txt, (SW//2-title_txt.get_width()//2, 0))
