@@ -179,8 +179,8 @@ def game():
         ## OPENING TRANSITION
         if tr_open_start:
             transitioning = True
-            tr_rect1.y -= 10
-            tr_rect2.y += 10
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
             tr_rect2.bottom = SH
             if tr_rect1.bottom < 0 or tr_rect2.top > SH:
                 tr_open_start = False
@@ -189,8 +189,8 @@ def game():
         ## CLOSING TRANSITION
         if tr_close_start:
             transitioning = True
-            tr_rect1.y += 10
-            tr_rect2.y -= 10
+            tr_rect1.h += 10
+            tr_rect2.h += 10
             tr_rect2.bottom = SH
             if tr_rect1.colliderect(tr_rect2):
                 tr_close_start = False
@@ -299,8 +299,8 @@ def menu():
         ## OPENING TRANSITION
         if tr_open_start:
             transitioning = True
-            tr_rect1.y -= 10
-            tr_rect2.y += 10
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
             tr_rect2.bottom = SH
             if tr_rect1.bottom < 0 or tr_rect2.top > SH:
                 tr_open_start = False
@@ -309,8 +309,8 @@ def menu():
         ## CLOSING TRANSITION
         if tr_close_start:
             transitioning = True
-            tr_rect1.y += 10
-            tr_rect2.y -= 10
+            tr_rect1.h += 10
+            tr_rect2.h += 10
             tr_rect2.bottom = SH
             if tr_rect1.colliderect(tr_rect2):
                 tr_close_start = False
