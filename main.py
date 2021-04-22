@@ -1,7 +1,7 @@
 import pygame, sys, json, random, os
 from pygame.math import Vector2 as vec
 from particles import ParticleSystem
-from buttons import RectButton
+from gui_stuff import RectButton
 
 pygame.init()
 pygame.mixer.init()
