@@ -1,7 +1,7 @@
 import pygame, sys, json, random, os
 from pygame.math import Vector2 as vec
 from particles import ParticleSystem
-from gui_stuff import RectButton
+from gui_stuff import RectButton, CheckBox, Slider
 
 pygame.init()
 pygame.mixer.init()
@@ -18,6 +18,10 @@ BnB = pygame.image.load(os.path.join("BeatNBoom.png")).convert_alpha()
 
 clock = pygame.time.Clock()
 
+## NORMAL DATA
+with open("data/data.json") as jfile1:
+    data = json.load(jfile1)
+
 def game():
 
     ## MUSIC DATA
@@ -33,7 +37,7 @@ def game():
 
     ## MUSIC
     pygame.mixer.music.load(music_name)
-    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.set_volume(data["volume"]/100)
     pygame.mixer.music.play(loops=-1)
 
     ## SFX
@@ -119,6 +123,7 @@ def game():
                 if event.key == pygame.K_ESCAPE:
                     if not transitioning:
                         tr_close_start = True
+                        pygame.mixer.music.fadeout(1000)
                 if event.key == pygame.K_LEFT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[1]:
@@ -167,9 +172,10 @@ def game():
                 score += score_increment
                 sfx_crash.play()
                 shake = 10
-                back_color.r = random.randint(50, 100)
-                back_color.g = random.randint(50, 100)
-                back_color.b = random.randint(50, 100)
+                if data["back_change"]:
+                    back_color.r = random.randint(50, 100)
+                    back_color.g = random.randint(50, 100)
+                    back_color.b = random.randint(50, 100)
 
                 collide_particle.pos = vec(pickups[i][1].center)
                 collide_particle.spawn()
@@ -264,8 +270,9 @@ def menu():
             ]
         )
 
-    play_button = RectButton(vec(SW//2, 2*SH//3), vec(100, 25), "PLAY")
-    settings_button = RectButton(vec(SW//2, 3*SH//4), vec(100, 25), "SETTINGS")
+    play_button = RectButton(vec(SW//2, 3*SH//4), vec(100, 25), "PLAY")
+    settings_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "SETTINGS")
+    exit_button = RectButton(vec(SW//2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT")
 
     tr_close_start = False
     tr_open_start = True
@@ -283,7 +290,7 @@ def menu():
                 pygame.quit()
                 sys.exit()
                 return "exit"
-            if event.type == BEAT_EVENT:
+            if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
                 back_color.g = random.randint(50, 100)
                 back_color.b = random.randint(50, 100)
@@ -291,10 +298,17 @@ def menu():
         if play_button.clicked() and not transitioning:
             tr_go_to = "game"
             tr_close_start = True
+            pygame.mixer.music.fadeout(1000)
 
         if settings_button.clicked() and not transitioning:
             tr_go_to = "settings"
             tr_close_start = True
+            pygame.mixer.music.fadeout(1000)
+
+        if exit_button.clicked() and not transitioning:
+            tr_go_to = "exit"
+            tr_close_start = True
+            pygame.mixer.music.fadeout(1000)
 
         ## OPENING TRANSITION
         if tr_open_start:
@@ -315,10 +329,7 @@ def menu():
             if tr_rect1.colliderect(tr_rect2):
                 tr_close_start = False
                 transitioning = False
-                if tr_go_to == "game":
-                    return "game"
-                elif tr_go_to == "settings":
-                    return "settings"
+                return tr_go_to
 
         ## drawing
         for c in circles:
@@ -334,6 +345,7 @@ def menu():
 
         play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         settings_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        exit_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
@@ -344,9 +356,10 @@ def menu():
         clock.tick(45)
         pygame.display.update()
 
+
 def settings():
     ## FONTS
-    # title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+    title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
 
     ## MUSIC DATA
     with open("music_data.json") as jfile:
@@ -382,7 +395,10 @@ def settings():
             ]
         )
 
-    back_button = RectButton(vec(SW//2, SH-25), vec(100, 25), "BACK")
+    volume_slider = Slider(vec(SW//2, 90), vec(SW-50, 60), "MUSIC VOLUME", percent=data["volume"])
+    back_changing = CheckBox(vec(SW//2, 140), vec(SW-50, 32), "COLOR CHANGE", checked=data["back_change"])
+    back_button = RectButton(vec(60, SH-25), vec(100, 25), "BACK")
+    save_button = RectButton(vec(SW-60, SH-25), vec(100, 25), "APPLY")
 
     tr_close_start = False
     tr_open_start = True
@@ -392,6 +408,8 @@ def settings():
     tr_rect2.bottom = SH
     tr_go_to = "menu"
 
+    to_write = data
+
     while True:
         scroll.y += 5
         screen.fill(back_color)
@@ -400,15 +418,10 @@ def settings():
                 pygame.quit()
                 sys.exit()
                 return "exit"
-            if event.type == BEAT_EVENT:
+            if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
                 back_color.g = random.randint(50, 100)
                 back_color.b = random.randint(50, 100)
-
-        ## CLICKS
-        if back_button.clicked() and not transitioning:
-            tr_go_to = "menu"
-            tr_close_start = True
 
         ## OPENING TRANSITION
         if tr_open_start:
@@ -432,6 +445,18 @@ def settings():
                 if tr_go_to == "menu":
                     return "menu"
 
+        ## CLICKS
+        if back_button.clicked() and not transitioning:
+            tr_go_to = "menu"
+            tr_close_start = True
+            pygame.mixer.music.fadeout(1000)
+        if save_button.clicked() and not transitioning:
+            tr_go_to = "menu"
+            with open("data/data.json", "w") as jfile:
+                json.dump(to_write, jfile)
+            tr_close_start = True
+            pygame.mixer.music.fadeout(1000)
+
         ## drawing
         for c in circles:
             c[2] = c[1]/2
@@ -440,10 +465,15 @@ def settings():
             c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
 
         back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        save_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        volume_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97), (255, 255, 255))
+        back_changing.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97), (255, 255, 255))
 
-        #
-        # title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
-        # screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
+        to_write["volume"] = volume_slider.percent
+        to_write["back_change"] = back_changing.checked
+
+        title_txt = title_font.render("SETTINGS", False, (255, 255, 255))
+        screen.blit(title_txt, (SW//2-title_txt.get_width()//2, 0))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
@@ -464,4 +494,6 @@ while True:
     elif scene == "settings":
         scene = settings()
     elif scene == "exit":
+        pygame.quit()
+        sys.exit()
         break
