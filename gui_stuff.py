@@ -92,7 +92,7 @@ class Slider:
         self.rect.center = center
         self.text = text
         self.font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
-        self.handle = pygame.Rect(0, 0, size.x//50, size.y//2)
+        self.handle = pygame.Rect(0, 0, size.y//4, size.y//4)
         self.percent = percent
         self.handle.centery = self.rect.centery
         self.handle.centerx = self.rect.x+((self.rect.right - self.rect.left)*(self.percent/100))

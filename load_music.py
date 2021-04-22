@@ -3,7 +3,7 @@ import json
 import librosa
 import numpy as np
 
-music_name = "/home/boss/Projects/BeatBoomerGit/music/woaby/DJ SuperSaw - Waves-YW7JP4BhRC0.ogg"
+music_name = "music/woaby/DJ SuperSaw - Waves-YW7JP4BhRC0.ogg"
 y, sr = librosa.load(music_name, dtype=float)        # y is waveform and sr is sampling rate, idk wut they do but still
 
 # amplitude = y[0:-1:100]
