@@ -30,5 +30,5 @@ def load_music(path: str):
         "tempo": tempo
     }
 
-    with open("music_data.json", "w") as f:
+    with open("assets/data/music_data.json", "w") as f:
         json.dump(data, f)

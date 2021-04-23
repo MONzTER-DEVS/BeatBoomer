@@ -7,7 +7,7 @@ class RectButton:
         self.rect = pygame.Rect(cpos.x-size.x//2, cpos.y-size.y//2, size.x, size.y)
         self.border_radius = border_radius
         self.text = text
-        self.font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
+        self.font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
 
     def clicked(self):
         if self.hovered() and pygame.mouse.get_pressed(3)[0]:
@@ -43,7 +43,7 @@ class CheckBox:
         self.check_box_rect = pygame.Rect(0, 0, size.y, size.y)
         self.check_box_rect.topright = self.rect.topright
         self.text = text
-        self.font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
+        self.font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
         self.checked = checked
         self.clickable = False
         self.f = 0
@@ -91,7 +91,7 @@ class Slider:
         self.rect = pygame.Rect((0, 0), size)
         self.rect.center = center
         self.text = text
-        self.font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
+        self.font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
         self.handle = pygame.Rect(0, 0, size.y//4, size.y//4)
         self.percent = percent
         self.handle.centery = self.rect.centery
