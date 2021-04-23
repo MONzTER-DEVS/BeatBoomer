@@ -12,17 +12,17 @@ def load_music(path: str):
     beat_times = librosa.frames_to_time(beat_frames, sr=sr)
     print("tempo:", tempo)
 
-    stft = (librosa.stft(y, hop_length=512, n_fft=1024))  # getting a matrix which contains amplitudes acc to freq and time
-    spectrogram = librosa.amplitude_to_db(stft, ref=np.max)  # converting the matrix to decibel matrix ##
+#    stft = (librosa.stft(y, hop_length=512, n_fft=1024))  # getting a matrix which contains amplitudes acc to freq and time
+#    spectrogram = librosa.amplitude_to_db(stft, ref=np.max)  # converting the matrix to decibel matrix ##
 
-    spec = np.abs(librosa.core.stft(y, n_fft=1024, hop_length=512))
-    duration = librosa.core.get_duration(filename=music_name)
+#    spec = np.abs(librosa.core.stft(y, n_fft=1024, hop_length=512))
+#    duration = librosa.core.get_duration(filename=music_name)
 
-    freqs = librosa.core.fft_frequencies(n_fft=1024)  # getting an array of freq ##
+#    freqs = librosa.core.fft_frequencies(n_fft=1024)  # getting an array of freq ##
     # getting an array of time periodic
-    times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sr, hop_length=512, n_fft=1024)
-    time_index_ratio = len(times)/times[len(times) - 1] ##
-    frequencies_index_ratio = len(freqs)/freqs[len(freqs)-1] ##
+#    times = librosa.core.frames_to_time(np.arange(spectrogram.shape[1]), sr=sr, hop_length=512, n_fft=1024)
+#    time_index_ratio = len(times)/times[len(times) - 1] ##
+#    frequencies_index_ratio = len(freqs)/freqs[len(freqs)-1] ##
 
     data = {
         "music_name": music_name,
