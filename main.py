@@ -1,7 +1,10 @@
-import pygame, sys, json, random, os
+import pygame, sys, json, random, os, threading
+from tkinter import Tk
+import tkinter.filedialog
 from pygame.math import Vector2 as vec
 from particles import ParticleSystem
 from gui_stuff import RectButton, CheckBox, Slider
+from load_music import load_music
 
 pygame.init()
 pygame.mixer.init()
@@ -18,19 +21,44 @@ BnB = pygame.image.load(os.path.join("BeatNBoom.png")).convert_alpha()
 
 clock = pygame.time.Clock()
 
-## NORMAL DATA
-with open("data/data.json") as jfile1:
-    data = json.load(jfile1)
+## UTILITY FUNCTIONS
+def prompt_file():
+    """Create a Tk file dialog and cleanup when finished"""
+    top = Tk()
+    top.withdraw()  # hide window
+    file_name = tkinter.filedialog.askopenfilename(parent=top)
+    top.destroy()
+    return file_name
 
+def change_music():
+    global music_name, beat_times, tempo
+    load_music(prompt_file())
+    music_name, beat_times, tempo = load_music_data()
+    pygame.mixer.music.load(music_name)
+    pygame.mixer.music.play(loops=-1)
+    return 0
+
+def spawn_background_circles():
+    circles = []
+    for i in range(250):
+        circles.append(
+            [
+                vec(random.gauss(SW/2, SW/8), random.randint(0, SH)),      # POSITION
+                random.randint(2, 15),                                      # RADIUS
+                0                                                           # PARALLAX FACTOR(?)
+            ]
+        )
+    return circles
+
+def draw_background_circles(circles, circle_color, back_color, scroll):
+    for c in circles:
+        c[2] = c[1]/2
+        if c[0].y-scroll.y//c[2] < -c[1]*2:
+            c[0].y += SH+c[1]*4
+        c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
+
+## SCENES
 def game():
-
-    ## MUSIC DATA
-    with open("music_data.json") as jfile:
-        music_data = json.load(jfile)
-
-    music_name = music_data["music_name"]
-    beat_times = music_data["beat_times"]
-    tempo = music_data["tempo"]
 
     ## FONTS
     game_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-Thin.ttf"), 11)
@@ -82,16 +110,8 @@ def game():
     pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
 
     ## BACK CIRCLES
-    circles = []
+    circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
-    for i in range(100):
-        circles.append(
-            [
-                vec(random.randint(50, SW-50), random.randint(0, SH)),      # POSITION
-                random.randint(5, 25),                                      # RADIUS
-                0                                                           # PARALLAX FACTOR(?)
-            ]
-        )
 
     ## TRANSITIONS STUFF
     tr_close_start = False
@@ -123,7 +143,8 @@ def game():
                 if event.key == pygame.K_ESCAPE:
                     if not transitioning:
                         tr_close_start = True
-                        pygame.mixer.music.fadeout(1000)
+                        # pygame.mixer.music.fadeout(1000)
+                        # pygame.mixer.music.play(loops=-1)
                 if event.key == pygame.K_LEFT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[1]:
@@ -204,11 +225,7 @@ def game():
                 return "menu"
 
         ## DRAWING
-        for c in circles:
-            c[2] = c[1]/2
-            if c[0].y-scroll.y//c[2] < -c[1]*2:
-                c[0].y += SH+c[1]*4
-            c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
+        draw_background_circles(circles, circle_color, back_color, scroll)
 
         score_txt = game_font.render("SCORE: "+str(score), False, (255, 255, 255)).convert_alpha()
         screen.blit(score_txt, (SW//2 - score_txt.get_rect().width//2, 0))
@@ -236,19 +253,6 @@ def menu():
     ## FONTS
     # title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
 
-    ## MUSIC DATA
-    with open("music_data.json") as jfile:
-        music_data = json.load(jfile)
-
-    music_name = music_data["music_name"]
-    beat_times = music_data["beat_times"]
-    tempo = music_data["tempo"]
-
-    ## MUSIC STUFF
-    pygame.mixer.music.load(music_name)
-    pygame.mixer.music.set_volume(data["volume"]/100)
-    pygame.mixer.music.play(loops=-1)
-
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
     tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
@@ -259,18 +263,11 @@ def menu():
     back_color = pygame.Color(155, 100, 100)
 
     ## BACK CIRCLES
-    circles = []
+    circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
-    for i in range(100):
-        circles.append(
-            [
-                vec(random.randint(50, SW-50), random.randint(0, SH)),      # POSITION
-                random.randint(5, 25),                                      # RADIUS
-                0                                                           # PARALLAX FACTOR(?)
-            ]
-        )
 
-    play_button = RectButton(vec(SW//2, 3*SH//4), vec(100, 25), "PLAY")
+    play_button = RectButton(vec(SW//2, 3*SH//5), vec(100, 25), "PLAY")
+    # customize_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "CUSTOMIZE")
     settings_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "SETTINGS")
     exit_button = RectButton(vec(SW//2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT")
 
@@ -300,10 +297,13 @@ def menu():
             tr_close_start = True
             pygame.mixer.music.fadeout(1000)
 
+        # if customize_button.clicked() and not transitioning:
+        #     tr_go_to = "customize"
+        #     tr_close_start = True
+
         if settings_button.clicked() and not transitioning:
             tr_go_to = "settings"
             tr_close_start = True
-            pygame.mixer.music.fadeout(1000)
 
         if exit_button.clicked() and not transitioning:
             tr_go_to = "exit"
@@ -332,11 +332,7 @@ def menu():
                 return tr_go_to
 
         ## drawing
-        for c in circles:
-            c[2] = c[1]/2
-            if c[0].y-scroll.y//c[2] < -c[1]*2:
-                c[0].y += SH+c[1]*4
-            c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
+        draw_background_circles(circles, circle_color, back_color, scroll)
 
         screen.blit(BnB, (SW//2-BnB.get_width()//2, 10))
         #
@@ -345,6 +341,7 @@ def menu():
 
         play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         settings_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        # customize_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         exit_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
@@ -356,23 +353,10 @@ def menu():
         clock.tick(45)
         pygame.display.update()
 
-
 def settings():
+    global change_music_thread
     ## FONTS
     title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
-
-    ## MUSIC DATA
-    with open("music_data.json") as jfile:
-        music_data = json.load(jfile)
-
-    music_name = music_data["music_name"]
-    beat_times = music_data["beat_times"]
-    tempo = music_data["tempo"]
-
-    ## MUSIC STUFF
-    pygame.mixer.music.load(music_name)
-    pygame.mixer.music.set_volume(data["volume"]/100)
-    pygame.mixer.music.play(loops=-1)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -384,19 +368,12 @@ def settings():
     back_color = pygame.Color(155, 100, 100)
 
     ## BACK CIRCLES
-    circles = []
+    circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
-    for i in range(100):
-        circles.append(
-            [
-                vec(random.randint(50, SW-50), random.randint(0, SH)),      # POSITION
-                random.randint(5, 25),                                      # RADIUS
-                0                                                           # PARALLAX FACTOR(?)
-            ]
-        )
 
     volume_slider = Slider(vec(SW//2, 90), vec(SW-50, 60), "MUSIC VOLUME", percent=data["volume"])
     back_changing = CheckBox(vec(SW//2, 140), vec(SW-50, 32), "COLOR CHANGE", checked=data["back_change"])
+    change_music_button = RectButton(vec(SW//2, 190), vec(SW-100, 25), "CHANGE MUSIC")
     back_button = RectButton(vec(60, SH-25), vec(100, 25), "BACK")
     save_button = RectButton(vec(SW-60, SH-25), vec(100, 25), "APPLY")
 
@@ -409,6 +386,7 @@ def settings():
     tr_go_to = "menu"
 
     to_write = data
+    music_path = music_name
 
     while True:
         scroll.y += 5
@@ -442,30 +420,34 @@ def settings():
             if tr_rect1.colliderect(tr_rect2):
                 tr_close_start = False
                 transitioning = False
-                if tr_go_to == "menu":
-                    return "menu"
+                return tr_go_to
 
         ## CLICKS
+        if change_music_button.clicked() and not transitioning:
+            # music_path = prompt_file()
+            change_music_thread = threading.Thread(target=change_music)
+            change_music_thread.start()
+
         if back_button.clicked() and not transitioning:
             tr_go_to = "menu"
             tr_close_start = True
-            pygame.mixer.music.fadeout(1000)
+
         if save_button.clicked() and not transitioning:
-            tr_go_to = "menu"
+            if change_music_thread.is_alive():
+                tr_go_to = "loading"
+            else:
+                tr_go_to = "menu"
             with open("data/data.json", "w") as jfile:
                 json.dump(to_write, jfile)
+            # return "loading"
             tr_close_start = True
-            pygame.mixer.music.fadeout(1000)
 
         ## drawing
-        for c in circles:
-            c[2] = c[1]/2
-            if c[0].y-scroll.y//c[2] < -c[1]*2:
-                c[0].y += SH+c[1]*4
-            c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
+        draw_background_circles(circles, circle_color, back_color, scroll)
 
         back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         save_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        change_music_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         volume_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97), (255, 255, 255))
         back_changing.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97), (255, 255, 255))
 
@@ -485,6 +467,202 @@ def settings():
         clock.tick(45)
         pygame.display.update()
 
+def customize():
+    ## FONTS
+    # title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+
+    ## BEAT STUFF
+    BEAT_EVENT = pygame.USEREVENT + 1
+    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+
+    ## WINDOW STUFF
+    scroll = vec()
+    back_color = pygame.Color(155, 100, 100)
+
+    ## BACK CIRCLES
+    circles = spawn_background_circles()
+    circle_color = pygame.Color(255, 255, 255)
+
+    select_music_button = RectButton(vec(SW//2, 3*SH//4), vec(100, 25), "C")
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2.bottom = SH
+    tr_go_to = "game"
+
+    while True:
+        scroll.y += 5
+        screen.fill(back_color)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                return "exit"
+            if event.type == BEAT_EVENT and data["back_change"]:
+                back_color.r = random.randint(50, 100)
+                back_color.g = random.randint(50, 100)
+                back_color.b = random.randint(50, 100)
+
+        if play_button.clicked() and not transitioning:
+            tr_go_to = "game"
+            tr_close_start = True
+            pygame.mixer.music.fadeout(1000)
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                return tr_go_to
+
+        ## drawing
+        draw_background_circles(circles, circle_color, back_color, scroll)
+
+        screen.blit(BnB, (SW//2-BnB.get_width()//2, 10))
+        #
+        # title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
+        # screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
+
+        play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+
+        ## WINDOW UPDATING
+        screen.blit(vig, (0, 0))
+        window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        clock.tick(45)
+        pygame.display.update()
+
+def loading(thread, nxt_scene):
+    ## FONTS
+    title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+
+    ## BEAT STUFF
+    BEAT_EVENT = pygame.USEREVENT + 1
+    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+
+    ## WINDOW STUFF
+    scroll = vec()
+    back_color = pygame.Color(155, 100, 100)
+
+    ## BACK CIRCLES
+    circles = spawn_background_circles()
+    circle_color = pygame.Color(255, 255, 255)
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect2.bottom = SH
+    tr_go_to = "game"
+
+    pygame.mixer.music.fadeout(1000)
+
+    while True:
+        scroll.y += 5
+        screen.fill(back_color)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                return "exit"
+            if event.type == BEAT_EVENT and data["back_change"]:
+                back_color.r = random.randint(50, 100)
+                back_color.g = random.randint(50, 100)
+                back_color.b = random.randint(50, 100)
+
+        # if play_button.clicked() and not transitioning:
+        #     tr_go_to = "game"
+        #     tr_close_start = True
+        #     pygame.mixer.music.fadeout(1000)
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                return tr_go_to
+
+        ## drawing
+        draw_background_circles(circles, circle_color, back_color, scroll)
+
+        #
+        title_txt = title_font.render("LOADING...", False, (255, 255, 255)).convert_alpha()
+        screen.blit(title_txt, (SW//2-title_txt.get_width()//2, 60))
+
+        # play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+
+        ## WINDOW UPDATING
+        if not thread.is_alive():
+            return nxt_scene
+        screen.blit(vig, (0, 0))
+        window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        clock.tick(45)
+        pygame.display.update()
+
+
+## THREADS
+change_music_thread = threading.Thread(target=change_music)
+
+## MUSIC DATA
+def load_music_data():
+    with open("music_data.json") as jfile:
+        music_data = json.load(jfile)
+
+    music_name = music_data["music_name"]
+    beat_times = music_data["beat_times"]
+    tempo = music_data["tempo"]
+    return music_name, beat_times, tempo
+
+music_name, beat_times, tempo = load_music_data()
+
+## NORMAL DATA
+with open("data/data.json") as jfile1:
+    data = json.load(jfile1)
+
+## MUSIC STUFF
+pygame.mixer.music.load(music_name)
+pygame.mixer.music.set_volume(data["volume"]/100)
+pygame.mixer.music.play(loops=-1)
+
 scene = "menu"
 
 while True:
@@ -492,8 +670,14 @@ while True:
         scene = menu()
     elif scene == "game":
         scene = game()
+    elif scene == "customize":
+        scene = customize()
     elif scene == "settings":
         scene = settings()
+    elif scene == "loading":
+        print(scene)
+        scene = loading(change_music_thread, "menu")
+        print(scene)
     elif scene == "exit":
         pygame.quit()
         sys.exit()

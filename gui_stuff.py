@@ -3,7 +3,7 @@ import pygame, os
 FONT_SIZE = 15
 
 class RectButton:
-    def __init__(self, cpos, size, text, border_radius=10):
+    def __init__(self, cpos, size, text, border_radius=15):
         self.rect = pygame.Rect(cpos.x-size.x//2, cpos.y-size.y//2, size.x, size.y)
         self.border_radius = border_radius
         self.text = text
@@ -22,11 +22,11 @@ class RectButton:
 
     def draw(self, screen, color, hover_color, click_color, font_color):
         if self.clicked():
-            pygame.draw.rect(screen, click_color, self.rect, border_radius=self.border_radius)
+            pygame.draw.rect(screen, click_color, self.rect, border_top_left_radius=self.border_radius, border_bottom_right_radius=self.border_radius)
         elif self.hovered():
-            pygame.draw.rect(screen, hover_color, self.rect, border_radius=self.border_radius)
+            pygame.draw.rect(screen, hover_color, self.rect, border_top_left_radius=self.border_radius, border_bottom_right_radius=self.border_radius)
         else:
-            pygame.draw.rect(screen, color, self.rect, border_radius=self.border_radius)
+            pygame.draw.rect(screen, color, self.rect, border_top_left_radius=self.border_radius, border_bottom_right_radius=self.border_radius)
         txt_img = self.font.render(self.text, False, font_color).convert_alpha()
         screen.blit(
             txt_img,
