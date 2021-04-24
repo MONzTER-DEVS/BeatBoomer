@@ -22,7 +22,7 @@ jobs:
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x64
             cachepath: ~\AppData\Local\pip\Cache
-            pyinstaller-options: --add-data c:/hostedtoolcache/windows/python/3.7.9/x64/lib/site-packages/librosa/util/example_data/registry.txt:registry.txt
+            pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x64/lib/site-packages/librosa/util/example_data/registry.txt;registry.txt"
 
           - os: macos-latest
             TARGET: mac
@@ -39,7 +39,6 @@ jobs:
             pyinstaller-options: --add-data /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages//librosa/util/example_data/registry.txt:librosa/util/example_data/registry.txt
 
     steps:
-      - continue-on-error: true
       - name: "get code"
         uses: actions/checkout@v2
 
