@@ -1,0 +1,51 @@
+name: build-binaries
+on: workflow_dispatch
+
+jobs:
+
+  create-executables:
+    name: Create executables
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+
+          - os: windows-latest
+            TARGET: "windows 32 bit"
+            file-copy-command: mkdir dist\assets && xcopy assets dist\assets /s
+            architecture: x86
+
+          - os: windows-latest
+            TARGET: "windows 64 bit"
+            file-copy-command: mkdir dist\assets && xcopy assets dist\assets /s
+            architecture: x64
+
+          - os: macos-latest
+            TARGET: mac
+            file-copy-command: pwd && ls && mkdir dist/assets && cp -a assets/. dist/assets/
+            architecture: x64
+
+    steps:
+      - name: "get code"
+        uses: actions/checkout@v2
+
+      - name: "setup environment"
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7.9'
+          architecture: ${{matrix.architecture}}
+
+      - name: "install dependencies"
+        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
+
+      - name: "build"
+        run: cd src/ && pyinstaller -F --name "Beat N Boom" main.py
+
+      - name: "copy other files"
+        run: ${{ matrix.file-copy-command }}
+
+      - name: "upload"
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.TARGET }}
+          path: src/dist/

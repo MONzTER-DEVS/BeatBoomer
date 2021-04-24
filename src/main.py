@@ -1,10 +1,17 @@
-import pygame, sys, json, random, os, threading
-from tkinter import Tk
 import tkinter.filedialog
+from tkinter import Tk
+
+import json
+import os
+import pygame
+import random
+import sys
+import threading
 from pygame.math import Vector2 as vec
-from particles import ParticleSystem
-from gui_stuff import RectButton, CheckBox, Slider
-from load_music import load_music
+
+from imports.gui_stuff import RectButton, CheckBox, Slider
+from imports.load_music import load_music
+from imports.particles import ParticleSystem
 
 pygame.init()
 pygame.mixer.init()
@@ -16,10 +23,11 @@ window = pygame.display.set_mode((WW, WH))
 
 SW, SH = 240, 320
 screen = pygame.Surface((SW, SH)).convert()
-vig = pygame.image.load(os.path.join("Vig.png")).convert_alpha()
-BnB = pygame.image.load(os.path.join("BeatNBoom.png")).convert_alpha()
+vig = pygame.image.load(os.path.join("assets/Vig.png")).convert_alpha()
+BnB = pygame.image.load(os.path.join("assets/BeatNBoom.png")).convert_alpha()
 
 clock = pygame.time.Clock()
+
 
 ## UTILITY FUNCTIONS
 def prompt_file():
@@ -30,47 +38,60 @@ def prompt_file():
     top.destroy()
     return file_name
 
+
 def change_music():
-    global music_name, beat_times, tempo
-    load_music(prompt_file())
-    music_name, beat_times, tempo = load_music_data()
-    pygame.mixer.music.load(music_name)
-    pygame.mixer.music.play(loops=-1)
+    global music_path, beat_times, tempo, music_name, producer_name
+    path = prompt_file()
+    # f_name = path.split("/")[-1]
+    if path != ():
+        music_name = os.path.split(path)[-1]
+        if ".ogg" in music_name:
+            load_music(path)
+            music_path, beat_times, tempo = load_music_data()
+            producer_name = os.path.basename(os.path.dirname(music_path))
+            try:
+                pygame.mixer.music.load(music_path)
+                pygame.mixer.music.play(loops=-1)
+            except pygame.error:
+                pass
     return 0
+
 
 def spawn_background_circles():
     circles = []
     for i in range(250):
         circles.append(
             [
-                vec(random.gauss(SW/2, SW/8), random.randint(0, SH)),      # POSITION
-                random.randint(2, 15),                                      # RADIUS
-                0                                                           # PARALLAX FACTOR(?)
+                vec(random.gauss(SW / 2, SW / 8), random.randint(0, SH)),  # POSITION
+                random.randint(2, 15),  # RADIUS
+                0  # PARALLAX FACTOR(?)
             ]
         )
     return circles
 
+
 def draw_background_circles(circles, circle_color, back_color, scroll):
     for c in circles:
-        c[2] = c[1]/2
-        if c[0].y-scroll.y//c[2] < -c[1]*2:
-            c[0].y += SH+c[1]*4
-        c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9), (c[0].x-scroll.x//c[2], c[0].y-scroll.y//c[2]), c[1])
+        c[2] = c[1] / 2
+        if c[0].y - scroll.y // c[2] < -c[1] * 2:
+            c[0].y += SH + c[1] * 4
+        c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9),
+                                    (c[0].x - scroll.x // c[2], c[0].y - scroll.y // c[2]), c[1])
+
 
 ## SCENES
 def game():
-
     ## FONTS
-    game_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-Thin.ttf"), 11)
+    game_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 11)
 
     ## MUSIC
-    pygame.mixer.music.load(music_name)
-    pygame.mixer.music.set_volume(data["volume"]/100)
+    pygame.mixer.music.load(music_path)
+    pygame.mixer.music.set_volume(data["volume"] / 100)
     pygame.mixer.music.play(loops=-1)
 
     ## SFX
-    sfx_crash = pygame.mixer.Sound(os.path.join("sfx", "crash2.wav"))
-    sfx_boom = pygame.mixer.Sound(os.path.join("sfx", "crash.wav"))
+    sfx_crash = pygame.mixer.Sound(os.path.join("assets/sfx", "crash2.wav"))
+    sfx_boom = pygame.mixer.Sound(os.path.join("assets/sfx", "crash.wav"))
     sfx_crash.set_volume(0.1)
     sfx_boom.set_volume(0.1)
 
@@ -81,8 +102,8 @@ def game():
     back_color = pygame.Color(100, 75, 60)
 
     ## PLAYER
-    player_img = pygame.image.load("player.png").convert_alpha()
-    player_rect = player_img.get_rect(center=(SW//2, SH//4))
+    player_img = pygame.image.load("assets/player.png").convert_alpha()
+    player_rect = player_img.get_rect(center=(SW // 2, SH // 4))
     player_vel = vec()
     player_max_vel_y = 10
     score = 0
@@ -92,22 +113,23 @@ def game():
     pickups = []
     pick_pos = [65, 120, 175]
     pick_imgs = [
-        pygame.image.load(os.path.join("pickups", "one.png")).convert_alpha(),
-        pygame.image.load(os.path.join("pickups", "two.png")).convert_alpha(),
-        pygame.image.load(os.path.join("pickups", "three.png")).convert_alpha()
+        pygame.image.load(os.path.join("assets/pickups", "one.png")).convert_alpha(),
+        pygame.image.load(os.path.join("assets/pickups", "two.png")).convert_alpha(),
+        pygame.image.load(os.path.join("assets/pickups", "three.png")).convert_alpha()
     ]
     pick_cache = pick_pos[0]
 
     ## PARTICLES
     # pos, vel, reduction_rate, size, num, color, spread=vec(5, 5)
-    player_particle = ParticleSystem(vec(player_rect.center), vec(0, 0), 0.5, vec(5, 5), 10, (255, 255, 255), spread=vec(5, 0))
+    player_particle = ParticleSystem(vec(player_rect.center), vec(0, 0), 0.5, vec(5, 5), 10, (255, 255, 255),
+                                     spread=vec(5, 0))
     collide_particle = ParticleSystem(vec(), vec(0, -1), 0.5, vec(10, 10), 50, (242, 166, 94), spread=vec(16, 0))
     pick_back_particle = ParticleSystem(vec(), vec(0, 0), 1, vec(16, 16), 10, (242, 166, 94), spread=vec(16, 0))
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
-    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
-    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
 
     ## BACK CIRCLES
     circles = spawn_background_circles()
@@ -117,21 +139,21 @@ def game():
     tr_close_start = False
     tr_open_start = True
     transitioning = True
-    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
-    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
     tr_rect2.bottom = SH
 
     start_ticks = pygame.time.get_ticks()
     frame, beat_index = 0, 0
     while True:
         ## TIME STUFF
-        seconds = (pygame.time.get_ticks() - start_ticks)/1000
+        seconds = (pygame.time.get_ticks() - start_ticks) / 1000
         frame += 1
 
         ## DISPLAY STUFF
         screen.fill(back_color)
-        scroll.x += (pick_pos[1] - scroll.x - SW/2) / 5
-        scroll.y += (player_rect.centery + 100 - scroll.y - SH/2) / 5
+        scroll.x += (pick_pos[1] - scroll.x - SW / 2) / 5
+        scroll.y += (player_rect.centery + 100 - scroll.y - SH / 2) / 5
 
         ## EVENTS
         for event in pygame.event.get():
@@ -148,16 +170,16 @@ def game():
                 if event.key == pygame.K_LEFT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[1]:
-                        player_rect.centerx += (pick_pos[0]-player_rect.centerx)
+                        player_rect.centerx += (pick_pos[0] - player_rect.centerx)
                         # cur_x += (target_x-cur_x)*deltatime*k
                     elif player_rect.centerx == pick_pos[2]:
-                        player_rect.centerx += (pick_pos[1]-player_rect.centerx)
+                        player_rect.centerx += (pick_pos[1] - player_rect.centerx)
                 if event.key == pygame.K_RIGHT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[0]:
-                        player_rect.centerx += (pick_pos[1]-player_rect.centerx)
+                        player_rect.centerx += (pick_pos[1] - player_rect.centerx)
                     elif player_rect.centerx == pick_pos[1]:
-                        player_rect.centerx += (pick_pos[2]-player_rect.centerx)
+                        player_rect.centerx += (pick_pos[2] - player_rect.centerx)
             # if event.type == pygame.KEYUP:
             #     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
             #         player_vel.x = 0
@@ -187,7 +209,7 @@ def game():
         collide_particle.update()
         # pickups
         for i, pick in sorted(enumerate(pickups), reverse=True):
-            if (pick[1].bottom+100 <= visible_area.top):
+            if (pick[1].bottom + 100 <= visible_area.top):
                 pickups.pop(i)
             if pick[1].colliderect(player_rect):
                 score += score_increment
@@ -227,8 +249,13 @@ def game():
         ## DRAWING
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        score_txt = game_font.render("SCORE: "+str(score), False, (255, 255, 255)).convert_alpha()
-        screen.blit(score_txt, (SW//2 - score_txt.get_rect().width//2, 0))
+        score_txt = game_font.render("SCORE: " + str(score), False, (255, 255, 255)).convert_alpha()
+        score_txt.set_alpha(200)
+        screen.blit(score_txt, (SW // 2 - score_txt.get_rect().width // 2, 0))
+
+        music_txt = game_font.render("PLAYING" + music_name + " BY " + producer_name, False, (255, 255, 255)).convert_alpha()
+        music_txt.set_alpha(200)
+        screen.blit(music_txt, (SW // 2 - music_txt.get_rect().width // 2, SH - music_txt.get_height()))
 
         if shake > 0:
             scroll.x += random.randint(-4, 4)
@@ -249,14 +276,15 @@ def game():
         clock.tick(45)
         pygame.display.update()
 
+
 def menu():
     ## FONTS
     # title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
-    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
-    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
 
     ## WINDOW STUFF
     scroll = vec()
@@ -266,16 +294,16 @@ def menu():
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    play_button = RectButton(vec(SW//2, 3*SH//5), vec(100, 25), "PLAY")
+    play_button = RectButton(vec(SW // 2, 3 * SH // 5), vec(100, 25), "PLAY")
     # customize_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "CUSTOMIZE")
-    settings_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "SETTINGS")
-    exit_button = RectButton(vec(SW//2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT")
+    settings_button = RectButton(vec(SW // 2, play_button.rect.bottom + 15), vec(100, 25), "SETTINGS")
+    exit_button = RectButton(vec(SW // 2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT")
 
     tr_close_start = False
     tr_open_start = True
     transitioning = True
-    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
-    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
     tr_rect2.bottom = SH
     tr_go_to = "game"
 
@@ -334,7 +362,7 @@ def menu():
         ## drawing
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        screen.blit(BnB, (SW//2-BnB.get_width()//2, 10))
+        screen.blit(BnB, (SW // 2 - BnB.get_width() // 2, 10))
         #
         # title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
         # screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
@@ -353,15 +381,17 @@ def menu():
         clock.tick(45)
         pygame.display.update()
 
+
 def settings():
     global change_music_thread
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+    norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
-    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
-    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
 
     ## WINDOW STUFF
     scroll = vec()
@@ -371,22 +401,22 @@ def settings():
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    volume_slider = Slider(vec(SW//2, 90), vec(SW-50, 60), "MUSIC VOLUME", percent=data["volume"])
-    back_changing = CheckBox(vec(SW//2, 140), vec(SW-50, 32), "COLOR CHANGE", checked=data["back_change"])
-    change_music_button = RectButton(vec(SW//2, 190), vec(SW-100, 25), "CHANGE MUSIC")
-    back_button = RectButton(vec(60, SH-25), vec(100, 25), "BACK")
-    save_button = RectButton(vec(SW-60, SH-25), vec(100, 25), "APPLY")
+    volume_slider = Slider(vec(SW // 2, 90), vec(SW - 50, 60), "MUSIC VOLUME", percent=data["volume"])
+    back_changing = CheckBox(vec(SW // 2, 140), vec(SW - 50, 32), "COLOR CHANGE", checked=data["back_change"])
+    change_music_button = RectButton(vec(SW // 2, 190), vec(SW - 100, 25), "CHANGE MUSIC")
+    back_button = RectButton(vec(60, SH - 25), vec(100, 25), "BACK")
+    save_button = RectButton(vec(SW - 60, SH - 25), vec(100, 25), "APPLY")
 
     tr_close_start = False
     tr_open_start = True
     transitioning = True
-    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
-    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
     tr_rect2.bottom = SH
     tr_go_to = "menu"
 
     to_write = data
-    music_path = music_name
+    # music_path_to_write = music_path
 
     while True:
         scroll.y += 5
@@ -437,7 +467,7 @@ def settings():
                 tr_go_to = "loading"
             else:
                 tr_go_to = "menu"
-            with open("data/data.json", "w") as jfile:
+            with open("assets/data/data.json", "w") as jfile:
                 json.dump(to_write, jfile)
             # return "loading"
             tr_close_start = True
@@ -447,16 +477,19 @@ def settings():
 
         back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         save_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        change_music_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        volume_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97), (255, 255, 255))
-        back_changing.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97), (255, 255, 255))
+        change_music_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97),
+                                 (0, 0, 0))
+        volume_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
+                           (255, 255, 255))
+        back_changing.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
+                           (255, 255, 255))
 
         to_write["volume"] = volume_slider.percent
         to_write["back_change"] = back_changing.checked
-        pygame.mixer.music.set_volume(volume_slider.percent/100)
+        pygame.mixer.music.set_volume(volume_slider.percent / 100)
 
         title_txt = title_font.render("SETTINGS", False, (255, 255, 255))
-        screen.blit(title_txt, (SW//2-title_txt.get_width()//2, 0))
+        screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
@@ -467,14 +500,15 @@ def settings():
         clock.tick(45)
         pygame.display.update()
 
+
 def customize():
     ## FONTS
     # title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
-    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
-    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
 
     ## WINDOW STUFF
     scroll = vec()
@@ -484,13 +518,13 @@ def customize():
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    select_music_button = RectButton(vec(SW//2, 3*SH//4), vec(100, 25), "C")
+    select_music_button = RectButton(vec(SW // 2, 3 * SH // 4), vec(100, 25), "C")
 
     tr_close_start = False
     tr_open_start = True
     transitioning = True
-    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
-    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
     tr_rect2.bottom = SH
     tr_go_to = "game"
 
@@ -536,7 +570,7 @@ def customize():
         ## drawing
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        screen.blit(BnB, (SW//2-BnB.get_width()//2, 10))
+        screen.blit(BnB, (SW // 2 - BnB.get_width() // 2, 10))
         #
         # title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
         # screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
@@ -552,14 +586,15 @@ def customize():
         clock.tick(45)
         pygame.display.update()
 
+
 def loading(thread, nxt_scene):
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
+    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Light.ttf"), 15)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
-    tempo = beat_times[len(beat_times)//2 + 1] - beat_times[len(beat_times)//2]
-    pygame.time.set_timer(BEAT_EVENT, int((tempo)*1000))
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
 
     ## WINDOW STUFF
     scroll = vec()
@@ -572,12 +607,14 @@ def loading(thread, nxt_scene):
     tr_close_start = False
     tr_open_start = True
     transitioning = True
-    tr_rect1 = pygame.Rect(0, 0, SW, SH//2)
-    tr_rect2 = pygame.Rect(0, 0, SW, SH//2)
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
     tr_rect2.bottom = SH
     tr_go_to = "game"
 
     pygame.mixer.music.fadeout(1000)
+    loading_circle_width = 1
+    loading_circle_dw = 1
 
     while True:
         scroll.y += 5
@@ -623,7 +660,9 @@ def loading(thread, nxt_scene):
 
         #
         title_txt = title_font.render("LOADING...", False, (255, 255, 255)).convert_alpha()
-        screen.blit(title_txt, (SW//2-title_txt.get_width()//2, 60))
+        # title_txt.set_alpha(loading_circle_width*5)
+        # print(loading_circle_width, loading_circle_width*5)
+        screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 60))
 
         # play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
 
@@ -639,34 +678,135 @@ def loading(thread, nxt_scene):
         pygame.display.update()
 
 
+def splash():
+
+    ## MONZTER DEVS src/assets/MonzterDevs.png
+    MzR = pygame.image.load(os.path.join("assets", "MonzterDevs1.png")).convert_alpha()
+    bloom = pygame.image.load(os.path.join("assets", "Bloom200x200.png")).convert_alpha()
+    overlay = pygame.Surface((SW, SH)).convert_alpha()
+    overlay.set_alpha(125)
+
+    ## BEAT STUFF
+    BEAT_EVENT = pygame.USEREVENT + 1
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
+
+    ## WINDOW STUFF
+    scroll = vec()
+    back_color = pygame.Color(155, 100, 100)
+
+    ## BACK CIRCLES
+    circles = spawn_background_circles()
+    circle_color = pygame.Color(255, 255, 255)
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2.bottom = SH
+    tr_go_to = "menu"
+
+    op = 0
+
+    while True:
+        scroll.y += 5
+        screen.fill(back_color)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                return "exit"
+            if event.type == BEAT_EVENT and data["back_change"]:
+                back_color.r = random.randint(50, 100)
+                back_color.g = random.randint(50, 100)
+                back_color.b = random.randint(50, 100)
+
+        # if play_button.clicked() and not transitioning:
+        #     tr_go_to = "game"
+        #     tr_close_start = True
+        #     pygame.mixer.music.fadeout(1000)
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                return tr_go_to
+
+        ## drawing
+        draw_background_circles(circles, circle_color, back_color, scroll)
+
+        op += 1
+        bloom.set_alpha(op//2)
+        MzR.set_alpha(op)
+
+        if op >= 255:
+            tr_close_start = True
+
+        screen.blit(overlay, (0, 0))
+        screen.blit(bloom, (SW//2-bloom.get_width()//2, SH//2-bloom.get_height()//2))
+        screen.blit(MzR, (SW//2-MzR.get_width()//2, SH//2-MzR.get_height()//2))
+
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+
+        ## WINDOW UPDATING
+        screen.blit(vig, (0, 0))
+        window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        clock.tick(45)
+        pygame.display.update()
+
+
 ## THREADS
 change_music_thread = threading.Thread(target=change_music)
 
+
 ## MUSIC DATA
 def load_music_data():
-    with open("music_data.json") as jfile:
+    with open("assets/data/music_data.json") as jfile:
         music_data = json.load(jfile)
 
-    music_name = music_data["music_name"]
+    music_path = music_data["music_name"]
     beat_times = music_data["beat_times"]
     tempo = music_data["tempo"]
-    return music_name, beat_times, tempo
+    return music_path, beat_times, tempo
 
-music_name, beat_times, tempo = load_music_data()
+
+music_path, beat_times, tempo = load_music_data()
+
+music_name = os.path.split(music_path)[-1]
+producer_name = os.path.basename(os.path.dirname(music_path))
 
 ## NORMAL DATA
-with open("data/data.json") as jfile1:
+with open("assets/data/data.json") as jfile1:
     data = json.load(jfile1)
 
 ## MUSIC STUFF
-pygame.mixer.music.load(music_name)
-pygame.mixer.music.set_volume(data["volume"]/100)
+pygame.mixer.music.load(music_path)
+pygame.mixer.music.set_volume(data["volume"] / 100)
 pygame.mixer.music.play(loops=-1)
 
-scene = "menu"
+scene = "splash"
 
 while True:
-    if scene == "menu":
+    if scene == "splash":
+        scene = splash()
+    elif scene == "menu":
         scene = menu()
     elif scene == "game":
         scene = game()
@@ -675,9 +815,7 @@ while True:
     elif scene == "settings":
         scene = settings()
     elif scene == "loading":
-        print(scene)
         scene = loading(change_music_thread, "menu")
-        print(scene)
     elif scene == "exit":
         pygame.quit()
         sys.exit()

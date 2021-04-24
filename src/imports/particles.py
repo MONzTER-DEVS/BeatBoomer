@@ -1,6 +1,7 @@
 import pygame, random
 from pygame.math import Vector2 as vec
 
+
 class ParticleSystem:
 
     def __init__(self, pos, vel, reduction_rate, size, num, color, spread=vec(5, 5)):
@@ -12,14 +13,15 @@ class ParticleSystem:
         self.num = num
         self.particles = []
         self.spread = spread
-        self.image = pygame.Surface((int(self.radius.x*2), int(self.radius.y*2))).convert_alpha()
+        self.image = pygame.Surface((int(self.radius.x * 2), int(self.radius.y * 2))).convert_alpha()
         # self.image.set_colorkey((0, 0, 0))
         # format -> [pos, size, vel, ded or alive]
 
     def spawn(self):
         # format -> [pos, size, vel, ded or alive]
         for i in range(self.num):
-            p = vec(self.pos.x + random.randint(-self.spread.x, self.spread.x), self.pos.y + random.randint(-self.spread.x, self.spread.y))
+            p = vec(self.pos.x + random.randint(-self.spread.x, self.spread.x),
+                    self.pos.y + random.randint(-self.spread.x, self.spread.y))
             # do = vec(self.pos.x - p.x, self.pos.y - p.y)
             s = vec(random.randint(2, self.radius.x), random.randint(2, self.radius.y))
             self.particles.append([p, s, 'alive'])
@@ -43,8 +45,9 @@ class ParticleSystem:
         for particle in self.particles:
             # if surf_rect.collidepoint(particle[0].x - scroll.x, particle[0].y - scroll.y):
             if particle[2] == "alive":  ## only draw if it is alive
-                self.image = pygame.Surface((int(particle[1].x*2), int(particle[1].x*2))).convert()
-                pygame.draw.circle(self.image, self.color.lerp(lerp_color, random.random()), (particle[1].x, particle[1].x), particle[1].x)
+                self.image = pygame.Surface((int(particle[1].x * 2), int(particle[1].x * 2))).convert()
+                pygame.draw.circle(self.image, self.color.lerp(lerp_color, random.random()),
+                                   (particle[1].x, particle[1].x), particle[1].x)
                 self.image.set_colorkey((0, 0, 0))
                 surf.blit(self.image, (particle[0].x - scroll.x, particle[0].y - scroll.y), special_flags=flags)
             else:
