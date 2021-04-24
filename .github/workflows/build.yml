@@ -22,7 +22,7 @@ jobs:
 
           - os: macos-latest
             TARGET: mac
-            file-copy-command: cp -a assets/. dist/assets/
+            file-copy-command: mkdir dist/assets && cp -a assets/. dist/assets/
             architecture: x64
 
     steps:
