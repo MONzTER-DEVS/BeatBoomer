@@ -49,6 +49,9 @@ jobs:
         run: |
           echo "::set-output name=dir::$(pip cache dir)"
 
+      - name: "install dependencies"
+        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
+
       - name: pip cache
         uses: actions/cache@v2
         with:
@@ -57,8 +60,6 @@ jobs:
           restore-keys: |
             ${{ matrix.TARGET }}-pip-
 
-      - name: "install dependencies"
-        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
 
       - name: "build"
         run: cd src/ && pyinstaller -F --name "Beat N Boom" main.py
