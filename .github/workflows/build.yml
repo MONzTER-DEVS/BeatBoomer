@@ -28,6 +28,18 @@ jobs:
             architecture: x64
             cachepath: ~/Library/Caches/pip
 
+          - os: ubuntu-latest
+            TARGET: "linux 32 bit"
+            file-copy-command: mkdir src/dist/assets && cp -a src/assets/. src/dist/assets/
+            architecture: x86
+            cachepath: ~/.cache/pip
+
+          - os: ubuntu-latest
+            TARGET: "linux 64 bit"
+            file-copy-command: mkdir src/dist/assets && cp -a src/assets/. src/dist/assets/
+            architecture: x64
+            cachepath: ~/.cache/pip
+
     steps:
       - name: "get code"
         uses: actions/checkout@v2
@@ -47,9 +59,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ matrix.TARGET }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ matrix.TARGET }}-pip-
 
       - name: "install dependencies"
         run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
