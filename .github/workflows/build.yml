@@ -15,14 +15,14 @@ jobs:
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x86
             cachepath: ~\AppData\Local\pip\Cache
-            pyinstaller-options: --add-data c:\hostedtoolcache\windows\python\3.7.9\x86\lib\site-packages\librosa\util\example_data\registry.txt;librosa\util\example_data\registry.txt
+            pyinstaller-options: --add-data c:\hostedtoolcache\windows\python\3.7.9\x86\lib\site-packages\librosa\util\example_data\registry.txt;.
 
           - os: windows-latest
             TARGET: "windows 64 bit"
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x64
             cachepath: ~\AppData\Local\pip\Cache
-            pyinstaller-options: --add-data c:\hostedtoolcache\windows\python\3.7.9\x64\lib\site-packages\librosa\util\example_data\registry.txt;librosa\util\example_data\registry.txt
+            pyinstaller-options: --add-data c:\hostedtoolcache\windows\python\3.7.9\x64\lib\site-packages\librosa\util\example_data\registry.txt;.
 
           - os: macos-latest
             TARGET: mac
@@ -53,9 +53,6 @@ jobs:
         run: |
           echo "::set-output name=dir::$(pip cache dir)"
 
-      - name: "install dependencies"
-        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
-
       - name: pip cache
         uses: actions/cache@v2
         with:
@@ -64,6 +61,8 @@ jobs:
           restore-keys: |
             ${{ matrix.TARGET }}-pip-
 
+      - name: "install dependencies"
+        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
 
       - name: "build"
         run: cd src/ && pyinstaller -F --name "Beat N Boom" --windowed ${{ matrix.pyinstaller-options }} main.py
