@@ -5,7 +5,13 @@ jobs:
 
   create-executables:
     name: Create executables
-    runs-on: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            TARGET: windows
+
     steps:
       - name: "get code"
         uses: actions/checkout@v2
@@ -25,6 +31,5 @@ jobs:
       - name: "upload"
         uses: actions/upload-artifact@v2
         with:
-          name: built-executable
-          path:
-            dist
+          name: ${{ matrix.TARGET }}
+          path: dist/
