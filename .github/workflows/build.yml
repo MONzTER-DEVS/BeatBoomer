@@ -12,11 +12,12 @@ jobs:
           - os: windows-latest
             TARGET: windows
             file-copy-command: mkdir dist\assets && xcopy assets dist\assets /s
+            architectures: [x86_64, x64]
 
           - os: macos-latest
             TARGET: mac
             file-copy-command: cp -a assets/. dist/assets/
-
+            architectures: [x64]
 
     steps:
       - name: "get code"
@@ -26,7 +27,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.7.9'
-          architecture: x86
+          architecture: ${{matrix.architectures}}
 
       - name: "install dependencies"
         run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
