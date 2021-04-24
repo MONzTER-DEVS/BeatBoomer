@@ -13,14 +13,14 @@ jobs:
       - name: "setup environment"
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9.3'
+          python-version: '3.7.9'
           architecture: x86
 
       - name: "install dependencies"
         run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller
 
       - name: "build"
-        run: pyinstaller -F --name "Beat N Boom" src/main.py
+        run: cd src && pyinstaller -F --name "Beat N Boom" main.py
 
       - name: "upload"
         uses: actions/upload-artifact@v2
