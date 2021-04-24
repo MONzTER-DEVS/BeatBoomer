@@ -1,4 +1,4 @@
-name: build-binaries
+name: Compile-Executables
 on: workflow_dispatch
 
 jobs:
@@ -12,12 +12,12 @@ jobs:
 
           - os: windows-latest
             TARGET: "windows 32 bit"
-            file-copy-command: mkdir dist\assets && xcopy assets dist\assets /s
+            file-copy-command: dir && mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x86
 
           - os: windows-latest
             TARGET: "windows 64 bit"
-            file-copy-command: mkdir dist\assets && xcopy assets dist\assets /s
+            file-copy-command: dir && echo %cd% && src\mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x64
 
           - os: macos-latest
