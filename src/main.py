@@ -2,9 +2,9 @@ import pygame, sys, json, random, os, threading
 from tkinter import Tk
 import tkinter.filedialog
 from pygame.math import Vector2 as vec
-from particles import ParticleSystem
-from gui_stuff import RectButton, CheckBox, Slider
-from load_music import load_music
+from imports.particles import ParticleSystem
+from imports.gui_stuff import RectButton, CheckBox, Slider
+from imports.load_music import load_music
 
 pygame.init()
 pygame.mixer.init()

@@ -2,9 +2,10 @@ import pygame, os
 
 FONT_SIZE = 15
 
+
 class RectButton:
     def __init__(self, cpos, size, text, border_radius=15):
-        self.rect = pygame.Rect(cpos.x-size.x//2, cpos.y-size.y//2, size.x, size.y)
+        self.rect = pygame.Rect(cpos.x - size.x // 2, cpos.y - size.y // 2, size.x, size.y)
         self.border_radius = border_radius
         self.text = text
         self.font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
@@ -16,25 +17,29 @@ class RectButton:
 
     def hovered(self):
         mx, my = pygame.mouse.get_pos()
-        if self.rect.collidepoint(mx//2, my//2):
+        if self.rect.collidepoint(mx // 2, my // 2):
             return True
         return False
 
     def draw(self, screen, color, hover_color, click_color, font_color):
         if self.clicked():
-            pygame.draw.rect(screen, click_color, self.rect, border_top_left_radius=self.border_radius, border_bottom_right_radius=self.border_radius)
+            pygame.draw.rect(screen, click_color, self.rect, border_top_left_radius=self.border_radius,
+                             border_bottom_right_radius=self.border_radius)
         elif self.hovered():
-            pygame.draw.rect(screen, hover_color, self.rect, border_top_left_radius=self.border_radius, border_bottom_right_radius=self.border_radius)
+            pygame.draw.rect(screen, hover_color, self.rect, border_top_left_radius=self.border_radius,
+                             border_bottom_right_radius=self.border_radius)
         else:
-            pygame.draw.rect(screen, color, self.rect, border_top_left_radius=self.border_radius, border_bottom_right_radius=self.border_radius)
+            pygame.draw.rect(screen, color, self.rect, border_top_left_radius=self.border_radius,
+                             border_bottom_right_radius=self.border_radius)
         txt_img = self.font.render(self.text, False, font_color).convert_alpha()
         screen.blit(
             txt_img,
             (
-                self.rect.centerx-txt_img.get_rect().width//2,
-                self.rect.centery-txt_img.get_rect().height//2
+                self.rect.centerx - txt_img.get_rect().width // 2,
+                self.rect.centery - txt_img.get_rect().height // 2
             )
         )
+
 
 class CheckBox:
     def __init__(self, center, size, text, checked=True):
@@ -55,7 +60,7 @@ class CheckBox:
 
     def hovered(self):
         mx, my = pygame.mouse.get_pos()
-        if self.rect.collidepoint(mx//2, my//2):
+        if self.rect.collidepoint(mx // 2, my // 2):
             return True
         return False
 
@@ -79,12 +84,13 @@ class CheckBox:
             c = color
 
         txt_img = self.font.render(self.text, False, c).convert_alpha()
-        screen.blit(txt_img, (self.rect.x, self.rect.midleft[1] - txt_img.get_rect().height/2))
+        screen.blit(txt_img, (self.rect.x, self.rect.midleft[1] - txt_img.get_rect().height / 2))
 
         if not self.checked:
             pygame.draw.rect(screen, c, self.check_box_rect, border_radius=10, width=2)
         else:
             pygame.draw.rect(screen, c, self.check_box_rect, border_radius=10, width=0)
+
 
 class Slider:
     def __init__(self, center, size, text, percent=50):
@@ -92,10 +98,10 @@ class Slider:
         self.rect.center = center
         self.text = text
         self.font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
-        self.handle = pygame.Rect(0, 0, size.y//4, size.y//4)
+        self.handle = pygame.Rect(0, 0, size.y // 4, size.y // 4)
         self.percent = percent
         self.handle.centery = self.rect.centery
-        self.handle.centerx = self.rect.x+((self.rect.right - self.rect.left)*(self.percent/100))
+        self.handle.centerx = self.rect.x + ((self.rect.right - self.rect.left) * (self.percent / 100))
 
     def clicked(self):
         if self.hovered() and pygame.mouse.get_pressed(3)[0]:
@@ -104,7 +110,7 @@ class Slider:
 
     def hovered(self):
         mx, my = pygame.mouse.get_pos()
-        if self.rect.collidepoint(mx//2, my//2):
+        if self.rect.collidepoint(mx // 2, my // 2):
             return True
         return False
 
@@ -113,16 +119,16 @@ class Slider:
         if self.clicked():
             c = click_color
             mx, my = pygame.mouse.get_pos()
-            if mx//2 in range(self.rect.midleft[0], self.rect.midright[0]+1):
-                self.handle.centerx = mx//2
+            if mx // 2 in range(self.rect.midleft[0], self.rect.midright[0] + 1):
+                self.handle.centerx = mx // 2
         elif self.hovered():
             c = hover_color
         else:
             c = color
 
-        self.percent = (self.handle.centerx - self.rect.left)*(100/(self.rect.right - self.rect.left))
+        self.percent = (self.handle.centerx - self.rect.left) * (100 / (self.rect.right - self.rect.left))
 
         txt_img = self.font.render(self.text, False, c).convert_alpha()
         pygame.draw.line(screen, c, self.rect.midleft, self.rect.midright)
-        screen.blit(txt_img, (self.rect.midtop[0] - txt_img.get_width()//2, self.rect.y))
+        screen.blit(txt_img, (self.rect.midtop[0] - txt_img.get_width() // 2, self.rect.y))
         pygame.draw.rect(screen, c, self.handle, border_radius=10)

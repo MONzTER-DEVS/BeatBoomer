@@ -1,0 +1,28 @@
+name: build-binaries
+on: workflow_dispatch
+
+jobs:
+
+  create-executables:
+    name: Create executables
+    runs-on: [windows-latest]
+    steps:
+      - name: "get code"
+      - uses: actions/checkout@v2
+
+      - name: "setup environment"
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9.3'
+          architecture: x86
+        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller
+
+      - name: "build"
+        run: pyinstaller -F --name "Beat N Boom" src/main.py
+
+      - name: "upload"
+        uses: actions/upload-artifact@v2
+        with:
+          name: built-executable
+          path:
+            dist
