@@ -3,7 +3,7 @@
 ### A hypercasual, music based (addictive :P) game.
 
 <br>
-<center><img src="./BeatNBoom.png"></center>
+<center><img src="https://github.com/MONzTER-DEVS/BeatBoomer/blob/main/src/assets/BeatNBoom.png"></center>
 <br>
 <center>
 <img src="https://img.shields.io/github/repo-size/MONzTER-DEVS/BeatBoomer?style=for-the-badge">
@@ -17,5 +17,5 @@
 
 ## **Objective**
 
-- Collect pickups in the way 🎵
+- Collect pickups in the way and score as much as you can 🎵
 - Have fun 😉
