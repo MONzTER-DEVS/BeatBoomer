@@ -1,10 +1,17 @@
-import pygame, sys, json, random, os, threading
-from tkinter import Tk
 import tkinter.filedialog
+from tkinter import Tk
+
+import json
+import os
+import pygame
+import random
+import sys
+import threading
 from pygame.math import Vector2 as vec
-from imports.particles import ParticleSystem
+
 from imports.gui_stuff import RectButton, CheckBox, Slider
 from imports.load_music import load_music
+from imports.particles import ParticleSystem
 
 pygame.init()
 pygame.mixer.init()

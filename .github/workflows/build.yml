@@ -11,6 +11,12 @@ jobs:
         include:
           - os: windows-latest
             TARGET: windows
+            file-copy-command: mkdir dist\assets && xcopy assets dist\assets /s
+
+          - os: macos-latest
+            TARGET: mac
+            file-copy-command: cp -a assets/. dist/assets/
+
 
     steps:
       - name: "get code"
@@ -23,10 +29,13 @@ jobs:
           architecture: x86
 
       - name: "install dependencies"
-        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller
+        run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
 
       - name: "build"
         run: cd src && pyinstaller -F --name "Beat N Boom" main.py
+
+      - name: "copy other files"
+        run: ${{ matrix.file-copy-command }}
 
       - name: "upload"
         uses: actions/upload-artifact@v2

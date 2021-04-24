@@ -1,15 +1,14 @@
 
 def load_music(path: str):
     import json
-    import librosa
-    import numpy as np
+    from librosa import load, beat, frames_to_time
 
     music_name = path
-    y, sr = librosa.load(music_name, dtype=float)        # y is waveform and sr is sampling rate, idk wut they do but still
+    y, sr = load(music_name, dtype=float)        # y is waveform and sr is sampling rate, idk wut they do but still
 
-    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+    tempo, beat_frames = beat.beat_track(y=y, sr=sr)
 
-    beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+    beat_times = frames_to_time(beat_frames, sr=sr)
     print("tempo:", tempo)
 
 #    stft = (librosa.stft(y, hop_length=512, n_fft=1024))  # getting a matrix which contains amplitudes acc to freq and time
