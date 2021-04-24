@@ -12,18 +12,21 @@ jobs:
 
           - os: windows-latest
             TARGET: "windows 32 bit"
-            file-copy-command: dir && mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
+            file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x86
+            cachepath: ~\AppData\Local\pip\Cache
 
           - os: windows-latest
             TARGET: "windows 64 bit"
-            file-copy-command: dir && echo %cd% && src\mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
+            file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x64
+            cachepath: ~\AppData\Local\pip\Cache
 
           - os: macos-latest
             TARGET: mac
             file-copy-command: mkdir src/dist/assets && cp -a src/assets/. src/dist/assets/
             architecture: x64
+            cachepath: ~/Library/Caches/pip
 
     steps:
       - name: "get code"
@@ -34,6 +37,19 @@ jobs:
         with:
           python-version: '3.7.9'
           architecture: ${{matrix.architecture}}
+
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: pip cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: "install dependencies"
         run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
