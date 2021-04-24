@@ -15,24 +15,28 @@ jobs:
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x86
             cachepath: ~\AppData\Local\pip\Cache
+            pyinstaller-options: --add-data c:\hostedtoolcache\windows\python\3.7.9\x86\lib\site-packages\librosa\util\example_data\registry.txt;librosa\util\example_data\registry.txt
 
           - os: windows-latest
             TARGET: "windows 64 bit"
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x64
             cachepath: ~\AppData\Local\pip\Cache
+            pyinstaller-options: --add-data c:\hostedtoolcache\windows\python\3.7.9\x64\lib\site-packages\librosa\util\example_data\registry.txt;librosa\util\example_data\registry.txt
 
           - os: macos-latest
             TARGET: mac
             file-copy-command: mkdir src/dist/assets && cp -a src/assets/. src/dist/assets/
             architecture: x64
             cachepath: ~/Library/Caches/pip
+            pyinstaller-options: --add-data /Users/runner/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/librosa/util/example_data/registry.txt;librosa/util/example_data/registry.txt
 
           - os: ubuntu-latest
             TARGET: "linux 64 bit"
             file-copy-command: mkdir src/dist/assets && cp -a src/assets/. src/dist/assets/
             architecture: x64
             cachepath: ~/.cache/pip
+            pyinstaller-options: --add-data /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages//librosa/util/example_data/registry.txt;librosa/util/example_data/registry.txt
 
     steps:
       - name: "get code"
@@ -62,7 +66,7 @@ jobs:
 
 
       - name: "build"
-        run: cd src/ && pyinstaller -F --name "Beat N Boom" main.py
+        run: cd src/ && pyinstaller -F --name "Beat N Boom" --windowed ${{ matrix.pyinstaller-options }} main.py
 
       - name: "copy other files"
         run: ${{ matrix.file-copy-command }}
