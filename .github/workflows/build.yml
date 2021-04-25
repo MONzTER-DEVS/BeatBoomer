@@ -1,5 +1,11 @@
 name: Compile-Executables
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      disable-console:
+        description: 'if enabled then no console will be there in windows and mac'
+        required: false
+        default: 'y'
 
 jobs:
 
@@ -65,7 +71,17 @@ jobs:
         run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
 
       - name: "build"
+        if: ${{ github.event.inputs.disable-console == 'y'}}
         run: cd src/ && pyinstaller -F --name "Beat N Boom" --windowed ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
+
+      - name: "build (with console)"
+        if: !${{ github.event.inputs.disable-console == 'y'}}
+        run: cd src/ && pyinstaller -F --name "Beat N Boom" ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
+
+      - name: "Compress Executable"
+        uses: svenstaro/upx-action@v2
+        with:
+          file: src/dist/mything
 
       - name: "copy other files"
         run: ${{ matrix.file-copy-command }}
