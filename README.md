@@ -18,5 +18,7 @@ A hypercasual, music based (addictive :P) game. You can change the music and doi
 - Collect pickups in the way and score as much as you can 🎵
 - Have fun 😉
 
+<br>
+
 ## **NOTE**
 This (awesome :P) project is still under active development, so if you have any suggestions, want to get latest updates before everyone else, or want to just have a talk with us, join our [Discord Server](https://discord.gg/JWsuCXSwnp)!
