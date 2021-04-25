@@ -19,4 +19,4 @@ A hypercasual, music based (addictive :P) game. You can change the music and doi
 - Have fun 😉
 
 ## **NOTE**
-This (awesome :P) project is still under active development, so if you have any suggestions, want to get latest updates before everyone else, or want to just have a talk with us, join our (discord)[https://discord.gg/JWsuCXSwnp]!
+This (awesome :P) project is still under active development, so if you have any suggestions, want to get latest updates before everyone else, or want to just have a talk with us, join our [Discord Server](https://discord.gg/JWsuCXSwnp)!
