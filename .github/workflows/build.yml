@@ -75,7 +75,7 @@ jobs:
         run: cd src/ && pyinstaller -F --name "Beat N Boom" --windowed ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
 
       - name: "build (with console)"
-        if: !${{ github.event.inputs.disable-console == 'y'}}
+        if: ${{ github.event.inputs.disable-console != 'y'}}
         run: cd src/ && pyinstaller -F --name "Beat N Boom" ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
 
       - name: "Compress Executable"
