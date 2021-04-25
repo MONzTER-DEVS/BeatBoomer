@@ -65,7 +65,7 @@ jobs:
         run: python3 -m pip install -r requirements.txt && python3 -m pip install pyinstaller wheel
 
       - name: "build"
-        run: cd src/ && pyinstaller -F --name "Beat N Boom" --windowed ${{ matrix.pyinstaller-options }} main.py
+        run: cd src/ && pyinstaller -F --name "Beat N Boom" --windowed ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
 
       - name: "copy other files"
         run: ${{ matrix.file-copy-command }}
