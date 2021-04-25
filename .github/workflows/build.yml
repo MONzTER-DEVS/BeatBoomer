@@ -38,7 +38,7 @@ jobs:
             architecture: x64
             cachepath: ~/Library/Caches/pip
             pyinstaller-options: --add-data /Users/runner/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/librosa/util/example_data/registry.txt:librosa/util/example_data/registry.txt
-            executable-name: 'none'
+            executable-name: src/dist/BeatNBoom
 
           - os: ubuntu-latest
             TARGET: "linux 64 bit"
@@ -83,8 +83,7 @@ jobs:
         run: cd src/ && pyinstaller -F --name "BeatNBoom" ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
 
       - name: "Compress Executable"
-        if: ${{ matrix.executable-name != 'none'}}
-        uses: svenstaro/upx-action@v2
+        uses: gacts/upx@master
         with:
           file: ${{ matrix.executable-name}}
 
@@ -94,5 +93,5 @@ jobs:
       - name: "upload"
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.TARGET }}
+          file: ${{ matrix.TARGET }}
           path: src/dist/
