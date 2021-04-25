@@ -253,7 +253,8 @@ def game():
         score_txt.set_alpha(200)
         screen.blit(score_txt, (SW // 2 - score_txt.get_rect().width // 2, 0))
 
-        music_txt = game_font.render("PLAYING" + music_name + " BY " + producer_name, False, (255, 255, 255)).convert_alpha()
+        music_txt = game_font.render("PLAYING" + music_name + " BY " + producer_name, False,
+                                     (255, 255, 255)).convert_alpha()
         music_txt.set_alpha(200)
         screen.blit(music_txt, (SW // 2 - music_txt.get_rect().width // 2, SH - music_txt.get_height()))
 
@@ -456,6 +457,7 @@ def settings():
         if change_music_button.clicked() and not transitioning:
             # music_path = prompt_file()
             change_music_thread = threading.Thread(target=change_music)
+            change_music_thread.setDaemon(True)
             change_music_thread.start()
 
         if back_button.clicked() and not transitioning:
@@ -679,7 +681,6 @@ def loading(thread, nxt_scene):
 
 
 def splash():
-
     ## MONZTER DEVS src/assets/MonzterDevs.png
     MzR = pygame.image.load(os.path.join("assets", "MonzterDevs1.png")).convert_alpha()
     bloom = pygame.image.load(os.path.join("assets", "Bloom200x200.png")).convert_alpha()
@@ -752,15 +753,15 @@ def splash():
         draw_background_circles(circles, circle_color, back_color, scroll)
 
         op += 1
-        bloom.set_alpha(op//2)
+        bloom.set_alpha(op // 2)
         MzR.set_alpha(op)
 
         if op >= 255:
             tr_close_start = True
 
         screen.blit(overlay, (0, 0))
-        screen.blit(bloom, (SW//2-bloom.get_width()//2, SH//2-bloom.get_height()//2))
-        screen.blit(MzR, (SW//2-MzR.get_width()//2, SH//2-MzR.get_height()//2))
+        screen.blit(bloom, (SW // 2 - bloom.get_width() // 2, SH // 2 - bloom.get_height() // 2))
+        screen.blit(MzR, (SW // 2 - MzR.get_width() // 2, SH // 2 - MzR.get_height() // 2))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
@@ -774,7 +775,7 @@ def splash():
 
 ## THREADS
 change_music_thread = threading.Thread(target=change_music)
-
+change_music_thread.setDaemon(True)
 
 ## MUSIC DATA
 def load_music_data():
