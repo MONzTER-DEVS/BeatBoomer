@@ -76,7 +76,7 @@ jobs:
 
       - name: "build"
         if: ${{ github.event.inputs.disable-console == 'y'}}
-        run: cd src/ && pyinstaller -F --name "Beat N Boom" --windowed ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
+        run: cd src/ && pyinstaller -F --name "BeatNBoom" --windowed ${{ matrix.pyinstaller-options }} --hidden-import="sklearn.utils._weight_vector" main.py
 
       - name: "build (with console)"
         if: ${{ github.event.inputs.disable-console != 'y'}}
