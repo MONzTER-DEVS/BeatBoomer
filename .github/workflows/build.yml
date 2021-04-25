@@ -85,7 +85,7 @@ jobs:
       - name: "Compress Executable"
         uses: svenstaro/upx-action@v2
         with:
-          file: src/dist/${{ matrix.executable-name}}
+          file: "src/dist/${{ matrix.executable-name}}"
 
       - name: "copy other files"
         run: ${{ matrix.file-copy-command }}
