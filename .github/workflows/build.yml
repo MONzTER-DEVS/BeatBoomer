@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       disable-console:
-        description: 'if enabled then no console will be there in windows and mac'
+        description: disable-console
         required: false
         default: 'y'
 
@@ -22,6 +22,7 @@ jobs:
             architecture: x86
             cachepath: ~\AppData\Local\pip\Cache
             pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x86/lib/site-packages/librosa/util/example_data/registry.txt;registry.txt"
+            executable-name: "Beat N Boom.exe"
 
           - os: windows-latest
             TARGET: "windows 64 bit"
@@ -29,6 +30,7 @@ jobs:
             architecture: x64
             cachepath: ~\AppData\Local\pip\Cache
             pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x64/lib/site-packages/librosa/util/example_data/registry.txt;registry.txt"
+            executable-name: "Beat N Boom.exe"
 
           - os: macos-latest
             TARGET: mac
@@ -36,6 +38,7 @@ jobs:
             architecture: x64
             cachepath: ~/Library/Caches/pip
             pyinstaller-options: --add-data /Users/runner/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/librosa/util/example_data/registry.txt:librosa/util/example_data/registry.txt
+            executable-name: "Beat N Boom.app"
 
           - os: ubuntu-latest
             TARGET: "linux 64 bit"
@@ -43,6 +46,7 @@ jobs:
             architecture: x64
             cachepath: ~/.cache/pip
             pyinstaller-options: --add-data /opt/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/librosa/util/example_data/:librosa/util/example_data/
+            executable-name: "Beat N Boom"
 
     steps:
       - name: "get code"
@@ -81,7 +85,7 @@ jobs:
       - name: "Compress Executable"
         uses: svenstaro/upx-action@v2
         with:
-          file: src/dist/mything
+          file: src/dist/${{ matrix.executable-name}}
 
       - name: "copy other files"
         run: ${{ matrix.file-copy-command }}
