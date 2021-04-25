@@ -4,9 +4,11 @@ from tkinter import Tk
 import json
 import os
 import pygame
+# import pygame.gfxdraw
 import random
 import sys
 import threading
+import math
 from pygame.math import Vector2 as vec
 
 from imports.gui_stuff import RectButton, CheckBox, Slider
@@ -77,6 +79,15 @@ def draw_background_circles(circles, circle_color, back_color, scroll):
             c[0].y += SH + c[1] * 4
         c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9),
                                     (c[0].x - scroll.x // c[2], c[0].y - scroll.y // c[2]), c[1])
+
+
+def warp_value(value, min, max):
+    if value <= min:
+        return max
+    elif value > max:
+        return min
+    else:
+        return value
 
 
 ## SCENES
@@ -615,8 +626,18 @@ def loading(thread, nxt_scene):
     tr_go_to = "game"
 
     pygame.mixer.music.fadeout(1000)
-    loading_circle_width = 1
-    loading_circle_dw = 1
+    l_circle_start = 0
+    l_circle_end = 90
+    l_circle_rect1 = pygame.Rect(0, 0, 64, 64)
+    l_circle_rect1.center = (SW//2, SH//2)
+
+    l_circle_rect2 = pygame.Rect(0, 0, 60, 60)
+    l_circle_rect2.center = (SW//2, SH//2)
+
+    l_circle_rect3 = pygame.Rect(0, 0, 56, 56)
+    l_circle_rect3.center = (SW//2, SH//2)
+
+    f = 1
 
     while True:
         scroll.y += 5
@@ -626,10 +647,10 @@ def loading(thread, nxt_scene):
                 pygame.quit()
                 sys.exit()
                 return "exit"
-            if event.type == BEAT_EVENT and data["back_change"]:
-                back_color.r = random.randint(50, 100)
-                back_color.g = random.randint(50, 100)
-                back_color.b = random.randint(50, 100)
+            # if event.type == BEAT_EVENT and data["back_change"]:
+            #     back_color.r = random.randint(50, 100)
+            #     back_color.g = random.randint(50, 100)
+            #     back_color.b = random.randint(50, 100)
 
         # if play_button.clicked() and not transitioning:
         #     tr_go_to = "game"
@@ -657,16 +678,28 @@ def loading(thread, nxt_scene):
                 transitioning = False
                 return tr_go_to
 
+
+        if l_circle_end - l_circle_start == 0:
+            f = -1
+
+        print(l_circle_end - l_circle_start)
+
+        l_circle_start += 5 * f
+        l_circle_end += 5.5 * f
+        l_circle_start = warp_value(l_circle_start, 0, 360)
+        l_circle_end = warp_value(l_circle_end, 0, 360)
+
         ## drawing
         draw_background_circles(circles, circle_color, back_color, scroll)
 
         #
         title_txt = title_font.render("LOADING...", False, (255, 255, 255)).convert_alpha()
-        # title_txt.set_alpha(loading_circle_width*5)
-        # print(loading_circle_width, loading_circle_width*5)
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 60))
 
-        # play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect1, math.radians(l_circle_start), math.radians(l_circle_end), width=1)
+        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect2, math.radians(l_circle_start-45), math.radians(l_circle_end-45), width=1)
+        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect3, math.radians(l_circle_start-90), math.radians(l_circle_end-90), width=1)
+        # pygame.gfxdraw.arc(screen, SW//2, SH//2, 32, l_circle_start, l_circle_end, (255, 255, 255))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
