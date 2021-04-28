@@ -21,7 +21,7 @@ jobs:
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x86
             cachepath: ~\AppData\Local\pip\Cache
-            pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x86/lib/site-packages/librosa/util/example_data;librosa/util/example_data"
+            pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x86/lib/site-packages/librosa/util/example_data;librosa/util/example_data" --icon assets\icon.ico
             executable-name: src\dist\BeatNBoom.exe
 
           - os: windows-latest
@@ -29,7 +29,7 @@ jobs:
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x64
             cachepath: ~\AppData\Local\pip\Cache
-            pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x64/lib/site-packages/librosa/util/example_data;librosa/util/example_data"
+            pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x64/lib/site-packages/librosa/util/example_data;librosa/util/example_data" --icon assets\icon.ico
 #            executable-name: src\dist\BeatNBoom.exe
 
           - os: macos-latest
@@ -37,7 +37,7 @@ jobs:
             file-copy-command: mkdir src/dist/assets && cp -a src/assets/. src/dist/assets/
             architecture: x64
             cachepath: ~/Library/Caches/pip
-            pyinstaller-options: --add-data /Users/runner/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/librosa/util/example_data:librosa/util/example_data
+            pyinstaller-options: --add-data /Users/runner/hostedtoolcache/Python/3.7.9/x64/lib/python3.7/site-packages/librosa/util/example_data:librosa/util/example_data --icon assets/icon.ico
 #            executable-name: src/dist/BeatNBoom
 
           - os: ubuntu-latest
