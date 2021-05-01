@@ -11,7 +11,7 @@ import threading
 import math
 from pygame.math import Vector2 as vec
 
-from imports.gui_stuff import RectButton, CheckBox, Slider
+from imports.gui_stuff import RectButton, CheckBox, Slider, Label
 from imports.load_music import load_music
 from imports.particles import ParticleSystem
 import imports.high_scores as high_scores
@@ -23,6 +23,8 @@ G = 0.05
 
 WW, WH = 480, 640
 window = pygame.display.set_mode((WW, WH))
+pygame.display.set_caption("Beat n' Boom")
+pygame.display.set_icon(pygame.image.load(os.path.join("assets", "BeatNBoom.png")))
 
 SW, SH = 240, 320
 screen = pygame.Surface((SW, SH)).convert()
@@ -176,13 +178,16 @@ def game():
         ## EVENTS
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                high_scores.save_score(music_name, score)
                 pygame.quit()
                 sys.exit()
                 return "exit"
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     if not transitioning:
                         tr_close_start = True
+                        high_scores.save_score(music_name, score)
                         # pygame.mixer.music.fadeout(1000)
                         # pygame.mixer.music.play(loops=-1)
                 if event.key == pygame.K_LEFT:
@@ -545,8 +550,8 @@ def menu():
     circle_color = pygame.Color(255, 255, 255)
 
     play_button = RectButton(vec(SW // 2, 3 * SH // 5), vec(100, 25), "PLAY")
-    # customize_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "CUSTOMIZE")
-    settings_button = RectButton(vec(SW // 2, play_button.rect.bottom + 15), vec(100, 25), "SETTINGS")
+    high_scr_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "SCORES")
+    settings_button = RectButton(vec(SW // 2, high_scr_button.rect.bottom + 15), vec(100, 25), "SETTINGS")
     exit_button = RectButton(vec(SW // 2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT")
 
     tr_close_start = False
@@ -574,9 +579,9 @@ def menu():
             tr_go_to = "mode_select"
             tr_close_start = True
 
-        # if customize_button.clicked() and not transitioning:
-        #     tr_go_to = "customize"
-        #     tr_close_start = True
+        if high_scr_button.clicked() and not transitioning:
+            tr_go_to = "high_score"
+            tr_close_start = True
 
         if settings_button.clicked() and not transitioning:
             tr_go_to = "settings"
@@ -618,7 +623,7 @@ def menu():
 
         play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         settings_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        # customize_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        high_scr_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
         exit_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
@@ -1056,10 +1061,135 @@ def mode_select():
         pygame.display.update()
 
 
+def high_score():
+    ## FONTS
+    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30)
+    norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
+
+    ## BEAT STUFF
+    BEAT_EVENT = pygame.USEREVENT + 1
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
+
+    ## WINDOW STUFF
+    scroll = vec()
+    back_color = pygame.Color(155, 100, 100)
+
+    ## BACK CIRCLES
+    circles = spawn_background_circles()
+    circle_color = pygame.Color(255, 255, 255)
+
+    back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2.bottom = SH
+    tr_go_to = "menu"
+
+    scores = high_scores.get_scores()
+
+
+    songs = [k for k in scores]
+    high_scr = [scores[k][0] for k in scores]
+
+    gui_scroll = vec(0, 0)
+    gui_scroll_area = pygame.Rect(0, 30, SW, SH-70)
+
+    labels = []
+    for i, s in enumerate(sorted(high_scr, reverse=True)):
+        labels.append(Label(vec(SW//3, 100+(i*20)), vec(SW-10, 100), songs[high_scr.index(s)]))
+        labels.append(Label(vec(5*SW//6, 100+(i*20)), vec(SW-10, 100), str(s)))
+    
+    lab_surf = pygame.Surface((gui_scroll_area.w, len(songs)*100)).convert_alpha()
+    lab_surf.set_colorkey((0, 0, 0))
+    # for l in labels:
+    #     l.draw(lab_surf, (255, 255, 255))
+
+    if len(scores) <= 0:
+        labels.append(Label(vec(SW//2, SH//2), vec(SW-10, 100), "NO DATA FOUND"))
+
+    while True:
+        scroll.y += 5
+        screen.fill(back_color)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                return "exit"
+            if event.type == BEAT_EVENT and data["back_change"]:
+                back_color.r = random.randint(50, 100)
+                back_color.g = random.randint(50, 100)
+                back_color.b = random.randint(50, 100)
+            if event.type == pygame.MOUSEWHEEL:
+                gui_scroll.y += event.y * 10
+            # else:
+            #     gui_scroll.y = 0
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                return tr_go_to
+
+        ## CLICKS
+        if back_button.clicked() and not transitioning:
+            tr_go_to = "menu"
+            tr_close_start = True
+        
+        ## drawing
+
+        draw_background_circles(circles, circle_color, back_color, scroll)
+
+        for l in labels:
+            l.draw(screen, (255, 255, 255), gui_scroll, gui_scroll_area)
+
+        # lab_surf.scroll(int(gui_scroll.x), int(gui_scroll.y))
+        # screen.blit(lab_surf.subsurface(gui_scroll_area), (gui_scroll_area.x, gui_scroll_area.y))
+
+        back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+
+        title_txt = title_font.render("HIGH SCORES", False, (255, 255, 255))
+        screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
+
+        # for label in labels:
+        #     label.draw(screen, (255, 255, 255))
+
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
+        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+
+        ## WINDOW UPDATING
+        screen.blit(vig, (0, 0))
+        window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        clock.tick(45)
+        pygame.display.update()
+
+
+
 ## THREADS
 change_music_thread = threading.Thread(target=change_music)
 change_music_thread.setDaemon(True)
 
+## DEBUG THINGY
+# for i in range(10, 20):
+#     high_scores.save_score("song"+str(i), i*10)
 
 ## MUSIC DATA
 def load_music_data():
@@ -1086,7 +1216,7 @@ pygame.mixer.music.load(music_path)
 pygame.mixer.music.set_volume(data["volume"] / 100)
 pygame.mixer.music.play(loops=-1)
 
-scene = "splash"
+scene = "high_score"
 
 while True:
     if scene == "splash":
@@ -1103,6 +1233,8 @@ while True:
         scene = settings()
     elif scene == "loading":
         scene = loading(change_music_thread, "menu")
+    elif scene == "high_score":
+        scene = high_score()
     elif scene == "exit":
         pygame.quit()
         sys.exit()

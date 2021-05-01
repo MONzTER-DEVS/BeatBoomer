@@ -16,9 +16,10 @@ def save_score(song_name, score):
     data = get_scores()
     if song_name in data.keys():
         data[song_name].append(score)
+        data[song_name] = sorted(data[song_name], reverse=True)
     else:
         data[song_name] = [score, ]
-        data[song_name].sort()
+        data[song_name] = sorted(data[song_name], reverse=True)
 
     with open(fp, "w") as f:
         json.dump(data, f)

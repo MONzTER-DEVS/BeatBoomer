@@ -132,3 +132,19 @@ class Slider:
         pygame.draw.line(screen, c, self.rect.midleft, self.rect.midright)
         screen.blit(txt_img, (self.rect.midtop[0] - txt_img.get_width() // 2, self.rect.y))
         pygame.draw.rect(screen, c, self.handle, border_radius=10)
+
+
+class Label:
+    def __init__(self, center, size, text):
+        self.rect = pygame.Rect((0, 0), size)
+        self.rect.center = center
+        self.text = text
+        self.font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
+
+    def draw(self, screen, color, scroll, area):
+        txt_img = self.font.render(self.text, False, color).convert_alpha()
+        if area.collidepoint((self.rect.midtop[0] - txt_img.get_width() // 2)-scroll.x, self.rect.y-scroll.y):
+            screen.blit(txt_img, ((self.rect.midtop[0] - txt_img.get_width() // 2)-scroll.x, self.rect.y-scroll.y))
+
+
+
