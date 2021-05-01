@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 .idea/
 music_data.json
+src/assets/data/high scores.json

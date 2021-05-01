@@ -14,6 +14,7 @@ from pygame.math import Vector2 as vec
 from imports.gui_stuff import RectButton, CheckBox, Slider
 from imports.load_music import load_music
 from imports.particles import ParticleSystem
+import imports.high_scores as high_scores
 
 pygame.init()
 pygame.mixer.init()
@@ -37,6 +38,7 @@ sfx_hit = pygame.mixer.Sound(os.path.join("assets", "sfx", "crash5.wav"))
 sfx_crash.set_volume(0.1)
 sfx_boom.set_volume(0.1)
 sfx_hit.set_volume(0.5)
+
 
 ## UTILITY FUNCTIONS
 def prompt_file():
@@ -409,7 +411,6 @@ def obs_mode():
                     i.get_rect(midtop=(pick_cache, visible_area.bottom))
                 ])
 
-
         ## UPDATING
         # player
         player_vel.y += G
@@ -467,7 +468,6 @@ def obs_mode():
         blood_overlay.set_alpha(blood_alpha)
         blood_overlay.fill((255, 0, 0))
         visible_area.center = (player_rect.centerx, player_rect.centery + 100)
-
 
         ## OPENING TRANSITION
         if tr_open_start:
@@ -780,13 +780,13 @@ def loading(thread, nxt_scene):
     l_circle_start = 0
     l_circle_end = 90
     l_circle_rect1 = pygame.Rect(0, 0, 64, 64)
-    l_circle_rect1.center = (SW//2, SH//2)
+    l_circle_rect1.center = (SW // 2, SH // 2)
 
     l_circle_rect2 = pygame.Rect(0, 0, 60, 60)
-    l_circle_rect2.center = (SW//2, SH//2)
+    l_circle_rect2.center = (SW // 2, SH // 2)
 
     l_circle_rect3 = pygame.Rect(0, 0, 56, 56)
-    l_circle_rect3.center = (SW//2, SH//2)
+    l_circle_rect3.center = (SW // 2, SH // 2)
 
     f = 1
 
@@ -829,7 +829,6 @@ def loading(thread, nxt_scene):
                 transitioning = False
                 return tr_go_to
 
-
         if l_circle_end - l_circle_start == 0:
             f = -1
 
@@ -847,9 +846,12 @@ def loading(thread, nxt_scene):
         title_txt = title_font.render("LOADING...", False, (255, 255, 255)).convert_alpha()
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 60))
 
-        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect1, math.radians(l_circle_start), math.radians(l_circle_end), width=1)
-        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect2, math.radians(l_circle_start-45), math.radians(l_circle_end-45), width=1)
-        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect3, math.radians(l_circle_start-90), math.radians(l_circle_end-90), width=1)
+        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect1, math.radians(l_circle_start),
+                        math.radians(l_circle_end), width=1)
+        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect2, math.radians(l_circle_start - 45),
+                        math.radians(l_circle_end - 45), width=1)
+        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect3, math.radians(l_circle_start - 90),
+                        math.radians(l_circle_end - 90), width=1)
         # pygame.gfxdraw.arc(screen, SW//2, SH//2, 32, l_circle_start, l_circle_end, (255, 255, 255))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
@@ -975,9 +977,9 @@ def mode_select():
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    zen_button = RectButton(vec(SW // 2, SH//2-20), vec(SW - 100, 25), "ZEN MODE")
+    zen_button = RectButton(vec(SW // 2, SH // 2 - 20), vec(SW - 100, 25), "ZEN MODE")
     normal_button = RectButton(vec(SW // 2, zen_button.rect.bottom + 20), vec(SW - 100, 25), "NORMAL MODE")
-    back_button = RectButton(vec(SW//2, SH - 25), vec(100, 25), "BACK")
+    back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
 
     tr_close_start = False
     tr_open_start = True
@@ -1054,10 +1056,10 @@ def mode_select():
         pygame.display.update()
 
 
-
 ## THREADS
 change_music_thread = threading.Thread(target=change_music)
 change_music_thread.setDaemon(True)
+
 
 ## MUSIC DATA
 def load_music_data():
