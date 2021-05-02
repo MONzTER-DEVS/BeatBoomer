@@ -41,13 +41,18 @@ sfx_crash.set_volume(0.1)
 sfx_boom.set_volume(0.1)
 sfx_hit.set_volume(0.5)
 
+def set_sfx_vol(percent):
+    sfx_crash.set_volume(percent/100)
+    sfx_boom.set_volume(percent/100)
+    sfx_hit.set_volume(percent/100)
+
 
 ## UTILITY FUNCTIONS
 def prompt_file():
     """Create a Tk file dialog and cleanup when finished"""
     top = Tk()
     top.withdraw()  # hide window
-    file_name = tkinter.filedialog.askopenfilename(parent=top)
+    file_name = tkinter.filedialog.askopenfilename(parent=top, filetypes=[("Audio Files", ".wav .ogg .mp3")])
     top.destroy()
     return file_name
 
@@ -56,18 +61,15 @@ def change_music():
     global music_path, beat_times, tempo, music_name, producer_name
     path = prompt_file()
     # f_name = path.split("/")[-1]
-    if path != ():
+    try:
         music_name = os.path.split(path)[-1]
-        if ".ogg" in music_name:
-            load_music(path)
-            music_path, beat_times, tempo = load_music_data()
-            producer_name = os.path.basename(os.path.dirname(music_path))
-            try:
-                pygame.mixer.music.load(music_path)
-                pygame.mixer.music.play(loops=-1)
-            except pygame.error:
-                pass
-    return 0
+        load_music(path)
+        music_path, beat_times, tempo = load_music_data()
+        producer_name = os.path.basename(os.path.dirname(music_path))
+        pygame.mixer.music.load(music_path)
+        pygame.mixer.music.play(loops=-1)
+    except Exception as e:
+        pass
 
 
 def spawn_background_circles():
@@ -105,6 +107,14 @@ def play_music():
     pygame.mixer.music.load(music_path)
     pygame.mixer.music.set_volume(data["volume"] / 100)
     pygame.mixer.music.play(loops=-1)
+
+
+def clamp(value, mini, maxi):
+    if value <= mini:
+        return mini
+    elif value >= maxi:
+        return maxi
+    return value
 
 
 ## SCENES
@@ -656,8 +666,9 @@ def settings():
     circle_color = pygame.Color(255, 255, 255)
 
     volume_slider = Slider(vec(SW // 2, 90), vec(SW - 50, 60), "MUSIC VOLUME", percent=data["volume"])
-    back_changing = CheckBox(vec(SW // 2, 140), vec(SW - 50, 32), "COLOR CHANGE", checked=data["back_change"])
-    change_music_button = RectButton(vec(SW // 2, 190), vec(SW - 100, 25), "CHANGE MUSIC")
+    sfx_slider = Slider(vec(SW // 2, 140), vec(SW - 50, 60), "SFX VOLUME", percent=data["sfx"])
+    back_changing = CheckBox(vec(SW // 2, 190), vec(SW - 50, 32), "COLOR CHANGE", checked=data["back_change"])
+    change_music_button = RectButton(vec(SW // 2, 240), vec(SW - 100, 25), "CHANGE MUSIC")
     back_button = RectButton(vec(60, SH - 25), vec(100, 25), "BACK")
     save_button = RectButton(vec(SW - 60, SH - 25), vec(100, 25), "APPLY")
 
@@ -670,7 +681,6 @@ def settings():
     tr_go_to = "menu"
 
     to_write = data
-    # music_path_to_write = music_path
 
     while True:
         scroll.y += 5
@@ -736,12 +746,16 @@ def settings():
                                  (0, 0, 0))
         volume_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
                            (255, 255, 255))
+        sfx_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
+                           (255, 255, 255))
         back_changing.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
                            (255, 255, 255))
 
         to_write["volume"] = volume_slider.percent
         to_write["back_change"] = back_changing.checked
+        to_write["sfx"] = sfx_slider.percent
         pygame.mixer.music.set_volume(volume_slider.percent / 100)
+        set_sfx_vol(sfx_slider.percent)
 
         title_txt = title_font.render("SETTINGS", False, (255, 255, 255))
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
@@ -758,7 +772,7 @@ def settings():
 
 def loading(thread, nxt_scene):
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Light.ttf"), 15)
+    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -836,8 +850,6 @@ def loading(thread, nxt_scene):
 
         if l_circle_end - l_circle_start == 0:
             f = -1
-
-        print(l_circle_end - l_circle_start)
 
         l_circle_start += 5 * f
         l_circle_end += 5.5 * f
@@ -1064,7 +1076,7 @@ def mode_select():
 def high_score():
     ## FONTS
     title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30)
-    norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
+    #norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -1091,7 +1103,6 @@ def high_score():
 
     scores = high_scores.get_scores()
 
-
     songs = [k for k in scores]
     high_scr = [scores[k][0] for k in scores]
 
@@ -1103,8 +1114,8 @@ def high_score():
         labels.append(Label(vec(SW//3, 100+(i*20)), vec(SW-10, 100), songs[high_scr.index(s)]))
         labels.append(Label(vec(5*SW//6, 100+(i*20)), vec(SW-10, 100), str(s)))
     
-    lab_surf = pygame.Surface((gui_scroll_area.w, len(songs)*100)).convert_alpha()
-    lab_surf.set_colorkey((0, 0, 0))
+    # lab_surf = pygame.Surface((gui_scroll_area.w, len(songs)*100)).convert_alpha()
+    # lab_surf.set_colorkey((0, 0, 0))
     # for l in labels:
     #     l.draw(lab_surf, (255, 255, 255))
 
@@ -1124,7 +1135,7 @@ def high_score():
                 back_color.g = random.randint(50, 100)
                 back_color.b = random.randint(50, 100)
             if event.type == pygame.MOUSEWHEEL:
-                gui_scroll.y += event.y * 10
+                gui_scroll.y -= event.y * 20
             # else:
             #     gui_scroll.y = 0
 
@@ -1149,6 +1160,8 @@ def high_score():
                 transitioning = False
                 return tr_go_to
 
+        gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom//2)
+
         ## CLICKS
         if back_button.clicked() and not transitioning:
             tr_go_to = "menu"
@@ -1161,16 +1174,10 @@ def high_score():
         for l in labels:
             l.draw(screen, (255, 255, 255), gui_scroll, gui_scroll_area)
 
-        # lab_surf.scroll(int(gui_scroll.x), int(gui_scroll.y))
-        # screen.blit(lab_surf.subsurface(gui_scroll_area), (gui_scroll_area.x, gui_scroll_area.y))
-
         back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
 
         title_txt = title_font.render("HIGH SCORES", False, (255, 255, 255))
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
-
-        # for label in labels:
-        #     label.draw(screen, (255, 255, 255))
 
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
         pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
@@ -1187,7 +1194,7 @@ def high_score():
 change_music_thread = threading.Thread(target=change_music)
 change_music_thread.setDaemon(True)
 
-## DEBUG THINGY
+## SCORE DEBUG THINGY
 # for i in range(10, 20):
 #     high_scores.save_score("song"+str(i), i*10)
 
@@ -1216,7 +1223,7 @@ pygame.mixer.music.load(music_path)
 pygame.mixer.music.set_volume(data["volume"] / 100)
 pygame.mixer.music.play(loops=-1)
 
-scene = "high_score"
+scene = "settings"
 
 while True:
     if scene == "splash":
