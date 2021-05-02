@@ -128,5 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .idea/
-music_data.json
-src/assets/data/high scores.json
+src/assets/data/
