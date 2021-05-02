@@ -1223,7 +1223,7 @@ pygame.mixer.music.load(music_path)
 pygame.mixer.music.set_volume(data["volume"] / 100)
 pygame.mixer.music.play(loops=-1)
 
-scene = "settings"
+scene = "splash"
 
 while True:
     if scene == "splash":
