@@ -4,14 +4,16 @@ from tkinter import Tk
 import json
 import os
 import pygame
+
 # import pygame.gfxdraw
 import random
 import sys
 import threading
 import math
+import webbrowser
 from pygame.math import Vector2 as vec
 
-from imports.gui_stuff import RectButton, CheckBox, Slider, Label
+from imports.gui_stuff import RectButton, CheckBox, Slider, Label, RectButtonImg
 from imports.load_music import load_music
 from imports.particles import ParticleSystem
 import imports.high_scores as high_scores
@@ -41,10 +43,11 @@ sfx_crash.set_volume(0.1)
 sfx_boom.set_volume(0.1)
 sfx_hit.set_volume(0.5)
 
+
 def set_sfx_vol(percent):
-    sfx_crash.set_volume(percent/100)
-    sfx_boom.set_volume(percent/100)
-    sfx_hit.set_volume(percent/100)
+    sfx_crash.set_volume(percent / 100)
+    sfx_boom.set_volume(percent / 100)
+    sfx_hit.set_volume(percent / 100)
 
 
 ## UTILITY FUNCTIONS
@@ -52,7 +55,9 @@ def prompt_file():
     """Create a Tk file dialog and cleanup when finished"""
     top = Tk()
     top.withdraw()  # hide window
-    file_name = tkinter.filedialog.askopenfilename(parent=top, filetypes=[("Audio Files", ".wav .ogg .mp3")])
+    file_name = tkinter.filedialog.askopenfilename(
+        parent=top, filetypes=[("Audio Files", ".wav .ogg .mp3")]
+    )
     top.destroy()
     return file_name
 
@@ -79,7 +84,7 @@ def spawn_background_circles():
             [
                 vec(random.gauss(SW / 2, SW / 8), random.randint(0, SH)),  # POSITION
                 random.randint(2, 15),  # RADIUS
-                0  # PARALLAX FACTOR(?)
+                0,  # PARALLAX FACTOR(?)
             ]
         )
     return circles
@@ -90,8 +95,12 @@ def draw_background_circles(circles, circle_color, back_color, scroll):
         c[2] = c[1] / 2
         if c[0].y - scroll.y // c[2] < -c[1] * 2:
             c[0].y += SH + c[1] * 4
-        c_rect = pygame.draw.circle(screen, circle_color.lerp(back_color, 0.9),
-                                    (c[0].x - scroll.x // c[2], c[0].y - scroll.y // c[2]), c[1])
+        c_rect = pygame.draw.circle(
+            screen,
+            circle_color.lerp(back_color, 0.9),
+            (c[0].x - scroll.x // c[2], c[0].y - scroll.y // c[2]),
+            c[1],
+        )
 
 
 def warp_value(value, min, max):
@@ -120,7 +129,9 @@ def clamp(value, mini, maxi):
 ## SCENES
 def game():
     ## FONTS
-    game_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 11)
+    game_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 11
+    )
 
     ## MUSIC
     play_music()
@@ -145,16 +156,27 @@ def game():
     pick_imgs = [
         pygame.image.load(os.path.join("assets/pickups", "one.png")).convert_alpha(),
         pygame.image.load(os.path.join("assets/pickups", "two.png")).convert_alpha(),
-        pygame.image.load(os.path.join("assets/pickups", "three.png")).convert_alpha()
+        pygame.image.load(os.path.join("assets/pickups", "three.png")).convert_alpha(),
     ]
     pick_cache = pick_pos[0]
 
     ## PARTICLES
     # pos, vel, reduction_rate, size, num, color, spread=vec(5, 5)
-    player_particle = ParticleSystem(vec(player_rect.center), vec(0, 0), 0.5, vec(5, 5), 10, (255, 255, 255),
-                                     spread=vec(5, 0))
-    collide_particle = ParticleSystem(vec(), vec(0, -1), 0.5, vec(10, 10), 50, (242, 166, 94), spread=vec(16, 0))
-    pick_back_particle = ParticleSystem(vec(), vec(0, 0), 1, vec(16, 16), 10, (242, 166, 94), spread=vec(16, 0))
+    player_particle = ParticleSystem(
+        vec(player_rect.center),
+        vec(0, 0),
+        0.5,
+        vec(5, 5),
+        10,
+        (255, 255, 255),
+        spread=vec(5, 0),
+    )
+    collide_particle = ParticleSystem(
+        vec(), vec(0, -1), 0.5, vec(10, 10), 50, (242, 166, 94), spread=vec(16, 0)
+    )
+    pick_back_particle = ParticleSystem(
+        vec(), vec(0, 0), 1, vec(16, 16), 10, (242, 166, 94), spread=vec(16, 0)
+    )
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -203,16 +225,16 @@ def game():
                 if event.key == pygame.K_LEFT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[1]:
-                        player_rect.centerx += (pick_pos[0] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[0] - player_rect.centerx
                         # cur_x += (target_x-cur_x)*deltatime*k
                     elif player_rect.centerx == pick_pos[2]:
-                        player_rect.centerx += (pick_pos[1] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[1] - player_rect.centerx
                 if event.key == pygame.K_RIGHT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[0]:
-                        player_rect.centerx += (pick_pos[1] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[1] - player_rect.centerx
                     elif player_rect.centerx == pick_pos[1]:
-                        player_rect.centerx += (pick_pos[2] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[2] - player_rect.centerx
             # if event.type == pygame.KEYUP:
             #     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
             #         player_vel.x = 0
@@ -221,10 +243,9 @@ def game():
                 new_pick_pos.remove(pick_cache)
                 pick_cache = random.choice(new_pick_pos)
                 i = random.choice(pick_imgs)
-                pickups.append([
-                    i,
-                    i.get_rect(midtop=(pick_cache, visible_area.bottom))
-                ])
+                pickups.append(
+                    [i, i.get_rect(midtop=(pick_cache, visible_area.bottom))]
+                )
 
         ## UPDATING
         # player
@@ -237,12 +258,14 @@ def game():
             player_vel.y = -player_max_vel_y
         # particles
         player_particle.update()
-        player_particle.pos = vec(player_rect.centerx - player_particle.radius.x, player_rect.top)
+        player_particle.pos = vec(
+            player_rect.centerx - player_particle.radius.x, player_rect.top
+        )
         player_particle.spawn()
         collide_particle.update()
         # pickups
         for i, pick in sorted(enumerate(pickups), reverse=True):
-            if (pick[1].bottom + 100 <= visible_area.top):
+            if pick[1].bottom + 100 <= visible_area.top:
                 pickups.pop(i)
             if pick[1].colliderect(player_rect):
                 score += score_increment
@@ -282,14 +305,20 @@ def game():
         ## DRAWING
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        score_txt = game_font.render("SCORE: " + str(score), False, (255, 255, 255)).convert_alpha()
+        score_txt = game_font.render(
+            "SCORE: " + str(score), False, (255, 255, 255)
+        ).convert_alpha()
         score_txt.set_alpha(200)
         screen.blit(score_txt, (SW // 2 - score_txt.get_rect().width // 2, 0))
 
-        music_txt = game_font.render("PLAYING" + music_name + " BY " + producer_name, False,
-                                     (255, 255, 255)).convert_alpha()
+        music_txt = game_font.render(
+            "PLAYING" + music_name + " BY " + producer_name, False, (255, 255, 255)
+        ).convert_alpha()
         music_txt.set_alpha(200)
-        screen.blit(music_txt, (SW // 2 - music_txt.get_rect().width // 2, SH - music_txt.get_height()))
+        screen.blit(
+            music_txt,
+            (SW // 2 - music_txt.get_rect().width // 2, SH - music_txt.get_height()),
+        )
 
         if shake > 0:
             scroll.x += random.randint(-4, 4)
@@ -302,8 +331,18 @@ def game():
             screen.blit(pick[0], (pick[1].x - scroll.x, pick[1].y - scroll.y))
         # screen.blit(pick_img1, (obs_rect.x - scroll.x, obs_rect.y - scroll.y))
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         screen.blit(vig, (0, 0))
         window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
@@ -313,7 +352,9 @@ def game():
 
 def obs_mode():
     ## FONTS
-    game_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 11)
+    game_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 11
+    )
 
     ## MUSIC
     play_music()
@@ -342,7 +383,7 @@ def obs_mode():
     pick_imgs = [
         pygame.image.load(os.path.join("assets/pickups", "one.png")).convert_alpha(),
         pygame.image.load(os.path.join("assets/pickups", "two.png")).convert_alpha(),
-        pygame.image.load(os.path.join("assets/pickups", "three.png")).convert_alpha()
+        pygame.image.load(os.path.join("assets/pickups", "three.png")).convert_alpha(),
     ]
     pick_cache = pick_pos[0]
 
@@ -353,10 +394,21 @@ def obs_mode():
 
     ## PARTICLES
     # pos, vel, reduction_rate, size, num, color, spread=vec(5, 5)
-    player_particle = ParticleSystem(vec(player_rect.center), vec(0, 0), 0.5, vec(5, 5), 10, (255, 255, 255),
-                                     spread=vec(5, 0))
-    collide_particle = ParticleSystem(vec(), vec(0, -1), 0.5, vec(10, 10), 50, (242, 166, 94), spread=vec(16, 0))
-    pick_back_particle = ParticleSystem(vec(), vec(0, 0), 1, vec(16, 16), 10, (242, 166, 94), spread=vec(16, 0))
+    player_particle = ParticleSystem(
+        vec(player_rect.center),
+        vec(0, 0),
+        0.5,
+        vec(5, 5),
+        10,
+        (255, 255, 255),
+        spread=vec(5, 0),
+    )
+    collide_particle = ParticleSystem(
+        vec(), vec(0, -1), 0.5, vec(10, 10), 50, (242, 166, 94), spread=vec(16, 0)
+    )
+    pick_back_particle = ParticleSystem(
+        vec(), vec(0, 0), 1, vec(16, 16), 10, (242, 166, 94), spread=vec(16, 0)
+    )
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -402,29 +454,30 @@ def obs_mode():
                 if event.key == pygame.K_LEFT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[1]:
-                        player_rect.centerx += (pick_pos[0] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[0] - player_rect.centerx
                         # cur_x += (target_x-cur_x)*deltatime*k
                     elif player_rect.centerx == pick_pos[2]:
-                        player_rect.centerx += (pick_pos[1] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[1] - player_rect.centerx
                 if event.key == pygame.K_RIGHT:
                     sfx_boom.play()
                     if player_rect.centerx == pick_pos[0]:
-                        player_rect.centerx += (pick_pos[1] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[1] - player_rect.centerx
                     elif player_rect.centerx == pick_pos[1]:
-                        player_rect.centerx += (pick_pos[2] - player_rect.centerx)
+                        player_rect.centerx += pick_pos[2] - player_rect.centerx
             # if event.type == pygame.KEYUP:
             #     if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
             #         player_vel.x = 0
             if event.type == BEAT_EVENT:
                 new_pick_pos = pick_pos.copy()
                 new_pick_pos.remove(pick_cache)
-                obstacles.append(obs_img.get_rect(midtop=(pick_cache, visible_area.bottom)))
+                obstacles.append(
+                    obs_img.get_rect(midtop=(pick_cache, visible_area.bottom))
+                )
                 pick_cache = random.choice(new_pick_pos)
                 i = random.choice(pick_imgs)
-                pickups.append([
-                    i,
-                    i.get_rect(midtop=(pick_cache, visible_area.bottom))
-                ])
+                pickups.append(
+                    [i, i.get_rect(midtop=(pick_cache, visible_area.bottom))]
+                )
 
         ## UPDATING
         # player
@@ -437,12 +490,14 @@ def obs_mode():
             player_vel.y = -player_max_vel_y
         # particles
         player_particle.update()
-        player_particle.pos = vec(player_rect.centerx - player_particle.radius.x, player_rect.top)
+        player_particle.pos = vec(
+            player_rect.centerx - player_particle.radius.x, player_rect.top
+        )
         player_particle.spawn()
         collide_particle.update()
         # pickups
         for i, pick in sorted(enumerate(pickups), reverse=True):
-            if (pick[1].bottom + 100 <= visible_area.top):
+            if pick[1].bottom + 100 <= visible_area.top:
                 pickups.pop(i)
             if pick[1].colliderect(player_rect):
                 score += score_increment
@@ -459,7 +514,7 @@ def obs_mode():
 
         ## OBSTACLES
         for i, obs in sorted(enumerate(obstacles), reverse=True):
-            if (obs.bottom + 100 <= visible_area.top):
+            if obs.bottom + 100 <= visible_area.top:
                 # print(len(sorted(enumerate(obstacles), reverse=True)))
                 obstacles.pop(i)
             if obs.colliderect(player_rect):
@@ -508,14 +563,20 @@ def obs_mode():
         ## DRAWING
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        score_txt = game_font.render("SCORE: " + str(score), False, (255, 255, 255)).convert_alpha()
+        score_txt = game_font.render(
+            "SCORE: " + str(score), False, (255, 255, 255)
+        ).convert_alpha()
         score_txt.set_alpha(200)
         screen.blit(score_txt, (SW // 2 - score_txt.get_rect().width // 2, 0))
 
-        music_txt = game_font.render("PLAYING" + music_name + " BY " + producer_name, False,
-                                     (255, 255, 255)).convert_alpha()
+        music_txt = game_font.render(
+            "PLAYING" + music_name + " BY " + producer_name, False, (255, 255, 255)
+        ).convert_alpha()
         music_txt.set_alpha(200)
-        screen.blit(music_txt, (SW // 2 - music_txt.get_rect().width // 2, SH - music_txt.get_height()))
+        screen.blit(
+            music_txt,
+            (SW // 2 - music_txt.get_rect().width // 2, SH - music_txt.get_height()),
+        )
 
         if shake > 0:
             scroll.x += random.randint(-4, 4)
@@ -533,8 +594,18 @@ def obs_mode():
 
         screen.blit(blood_overlay, (0, 0))
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         screen.blit(vig, (0, 0))
         window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
@@ -559,10 +630,30 @@ def menu():
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    play_button = RectButton(vec(SW // 2, 3 * SH // 5), vec(100, 25), "PLAY")
-    high_scr_button = RectButton(vec(SW//2, play_button.rect.bottom + 15), vec(100, 25), "SCORES")
-    settings_button = RectButton(vec(SW // 2, high_scr_button.rect.bottom + 15), vec(100, 25), "SETTINGS")
-    exit_button = RectButton(vec(SW // 2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT")
+    play_button = RectButton(vec(SW // 2, SH-110), vec(100, 25), "PLAY")
+    high_scr_button = RectButton(
+        vec(SW // 2, play_button.rect.bottom + 15), vec(100, 25), "SCORES"
+    )
+    settings_button = RectButton(
+        vec(SW // 2, high_scr_button.rect.bottom + 15), vec(100, 25), "SETTINGS"
+    )
+    exit_button = RectButton(
+        vec(SW // 2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT"
+    )
+    disc_button = RectButtonImg(
+        vec(SW-30, SH-30),
+        vec(40, 40),
+        pygame.image.load(
+            os.path.join("assets", "Discord-Logo-Black.png")
+        ).convert_alpha()
+    )
+    github_button = RectButtonImg(
+        vec(30, SH-30),
+        vec(40, 40),
+        pygame.image.load(
+            os.path.join("assets", "GitHub-Mark.png")
+        ).convert_alpha()
+    )
 
     tr_close_start = False
     tr_open_start = True
@@ -571,6 +662,8 @@ def menu():
     tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
     tr_rect2.bottom = SH
     tr_go_to = "game"
+
+    clicked = False
 
     while True:
         scroll.y += 5
@@ -584,6 +677,10 @@ def menu():
                 back_color.r = random.randint(50, 100)
                 back_color.g = random.randint(50, 100)
                 back_color.b = random.randint(50, 100)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                clicked = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                clicked = False
 
         if play_button.clicked() and not transitioning:
             tr_go_to = "mode_select"
@@ -596,6 +693,12 @@ def menu():
         if settings_button.clicked() and not transitioning:
             tr_go_to = "settings"
             tr_close_start = True
+
+        if disc_button.clicked(clicked) and not transitioning:
+            webbrowser.open("https://discord.gg/JWsuCXSwnp")
+        
+        if github_button.clicked(clicked) and not transitioning:
+            webbrowser.open("https://github.com/monzter-devs/")
 
         if exit_button.clicked() and not transitioning:
             tr_go_to = "exit"
@@ -631,13 +734,63 @@ def menu():
         # title_txt2 = title_font.render("BOOMER", False, (255, 255, 255)).convert_alpha()
         # screen.blit(title_txt2, (SW//2-title_txt2.get_width()//2, 60))
 
-        play_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        settings_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        high_scr_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        exit_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        play_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        settings_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        high_scr_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        exit_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        clicked = disc_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            clicked
+        )
+
+        clicked = github_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97), 
+            clicked
+        )
+
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         ## WINDOW UPDATING
         screen.blit(vig, (0, 0))
@@ -649,8 +802,12 @@ def menu():
 def settings():
     global change_music_thread
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40)
-    norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
+    title_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 40
+    )
+    norm_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15
+    )
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -665,10 +822,18 @@ def settings():
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    volume_slider = Slider(vec(SW // 2, 90), vec(SW - 50, 60), "MUSIC VOLUME", percent=data["volume"])
-    sfx_slider = Slider(vec(SW // 2, 140), vec(SW - 50, 60), "SFX VOLUME", percent=data["sfx"])
-    back_changing = CheckBox(vec(SW // 2, 190), vec(SW - 50, 32), "COLOR CHANGE", checked=data["back_change"])
-    change_music_button = RectButton(vec(SW // 2, 240), vec(SW - 100, 25), "CHANGE MUSIC")
+    volume_slider = Slider(
+        vec(SW // 2, 90), vec(SW - 50, 60), "MUSIC VOLUME", percent=data["volume"]
+    )
+    sfx_slider = Slider(
+        vec(SW // 2, 140), vec(SW - 50, 60), "SFX VOLUME", percent=data["sfx"]
+    )
+    back_changing = CheckBox(
+        vec(SW // 2, 190), vec(SW - 50, 32), "COLOR CHANGE", checked=data["back_change"]
+    )
+    change_music_button = RectButton(
+        vec(SW // 2, 240), vec(SW - 100, 25), "CHANGE MUSIC"
+    )
     back_button = RectButton(vec(60, SH - 25), vec(100, 25), "BACK")
     save_button = RectButton(vec(SW - 60, SH - 25), vec(100, 25), "APPLY")
 
@@ -740,16 +905,48 @@ def settings():
         ## drawing
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        save_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        change_music_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97),
-                                 (0, 0, 0))
-        volume_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
-                           (255, 255, 255))
-        sfx_slider.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
-                           (255, 255, 255))
-        back_changing.draw(screen, (255, 255, 255), back_color.lerp((255, 200, 200), 0.9), (255, 140, 97),
-                           (255, 255, 255))
+        back_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        save_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        change_music_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        volume_slider.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((255, 200, 200), 0.9),
+            (255, 140, 97),
+            (255, 255, 255),
+        )
+        sfx_slider.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((255, 200, 200), 0.9),
+            (255, 140, 97),
+            (255, 255, 255),
+        )
+        back_changing.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((255, 200, 200), 0.9),
+            (255, 140, 97),
+            (255, 255, 255),
+        )
 
         to_write["volume"] = volume_slider.percent
         to_write["back_change"] = back_changing.checked
@@ -760,8 +957,18 @@ def settings():
         title_txt = title_font.render("SETTINGS", False, (255, 255, 255))
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         ## WINDOW UPDATING
         screen.blit(vig, (0, 0))
@@ -772,7 +979,9 @@ def settings():
 
 def loading(thread, nxt_scene):
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
+    title_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15
+    )
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -860,19 +1069,49 @@ def loading(thread, nxt_scene):
         draw_background_circles(circles, circle_color, back_color, scroll)
 
         #
-        title_txt = title_font.render("LOADING...", False, (255, 255, 255)).convert_alpha()
+        title_txt = title_font.render(
+            "LOADING...", False, (255, 255, 255)
+        ).convert_alpha()
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 60))
 
-        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect1, math.radians(l_circle_start),
-                        math.radians(l_circle_end), width=1)
-        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect2, math.radians(l_circle_start - 45),
-                        math.radians(l_circle_end - 45), width=1)
-        pygame.draw.arc(screen, (255, 255, 255), l_circle_rect3, math.radians(l_circle_start - 90),
-                        math.radians(l_circle_end - 90), width=1)
+        pygame.draw.arc(
+            screen,
+            (255, 255, 255),
+            l_circle_rect1,
+            math.radians(l_circle_start),
+            math.radians(l_circle_end),
+            width=1,
+        )
+        pygame.draw.arc(
+            screen,
+            (255, 255, 255),
+            l_circle_rect2,
+            math.radians(l_circle_start - 45),
+            math.radians(l_circle_end - 45),
+            width=1,
+        )
+        pygame.draw.arc(
+            screen,
+            (255, 255, 255),
+            l_circle_rect3,
+            math.radians(l_circle_start - 90),
+            math.radians(l_circle_end - 90),
+            width=1,
+        )
         # pygame.gfxdraw.arc(screen, SW//2, SH//2, 32, l_circle_start, l_circle_end, (255, 255, 255))
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         ## WINDOW UPDATING
         if not thread.is_alive():
@@ -886,7 +1125,9 @@ def loading(thread, nxt_scene):
 def splash():
     ## MONZTER DEVS src/assets/MonzterDevs.png
     MzR = pygame.image.load(os.path.join("assets", "MonzterDevs1.png")).convert_alpha()
-    bloom = pygame.image.load(os.path.join("assets", "Bloom200x200.png")).convert_alpha()
+    bloom = pygame.image.load(
+        os.path.join("assets", "Bloom200x200.png")
+    ).convert_alpha()
     overlay = pygame.Surface((SW, SH)).convert_alpha()
     overlay.set_alpha(125)
 
@@ -963,11 +1204,25 @@ def splash():
             tr_close_start = True
 
         screen.blit(overlay, (0, 0))
-        screen.blit(bloom, (SW // 2 - bloom.get_width() // 2, SH // 2 - bloom.get_height() // 2))
-        screen.blit(MzR, (SW // 2 - MzR.get_width() // 2, SH // 2 - MzR.get_height() // 2))
+        screen.blit(
+            bloom, (SW // 2 - bloom.get_width() // 2, SH // 2 - bloom.get_height() // 2)
+        )
+        screen.blit(
+            MzR, (SW // 2 - MzR.get_width() // 2, SH // 2 - MzR.get_height() // 2)
+        )
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         ## WINDOW UPDATING
         screen.blit(vig, (0, 0))
@@ -978,8 +1233,12 @@ def splash():
 
 def mode_select():
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30)
-    norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
+    title_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30
+    )
+    norm_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15
+    )
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -995,7 +1254,9 @@ def mode_select():
     circle_color = pygame.Color(255, 255, 255)
 
     zen_button = RectButton(vec(SW // 2, SH // 2 - 20), vec(SW - 100, 25), "ZEN MODE")
-    normal_button = RectButton(vec(SW // 2, zen_button.rect.bottom + 20), vec(SW - 100, 25), "NORMAL MODE")
+    normal_button = RectButton(
+        vec(SW // 2, zen_button.rect.bottom + 20), vec(SW - 100, 25), "NORMAL MODE"
+    )
     back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
 
     tr_close_start = False
@@ -1056,15 +1317,43 @@ def mode_select():
         ## drawing
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        zen_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
-        normal_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        back_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        zen_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+        normal_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
 
         title_txt = title_font.render("CHANGE MODE", False, (255, 255, 255))
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         ## WINDOW UPDATING
         screen.blit(vig, (0, 0))
@@ -1075,8 +1364,10 @@ def mode_select():
 
 def high_score():
     ## FONTS
-    title_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30)
-    #norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
+    title_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30
+    )
+    # norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -1107,20 +1398,28 @@ def high_score():
     high_scr = [scores[k][0] for k in scores]
 
     gui_scroll = vec(0, 0)
-    gui_scroll_area = pygame.Rect(0, 30, SW, SH-70)
+    gui_scroll_area = pygame.Rect(0, 30, SW, SH - 70)
 
     labels = []
     for i, s in enumerate(sorted(high_scr, reverse=True)):
-        labels.append(Label(vec(SW//3, 100+(i*20)), vec(SW-10, 100), songs[high_scr.index(s)]))
-        labels.append(Label(vec(5*SW//6, 100+(i*20)), vec(SW-10, 100), str(s)))
-    
+        labels.append(
+            Label(
+                vec(SW // 3, 100 + (i * 20)),
+                vec(SW - 10, 100),
+                songs[high_scr.index(s)],
+            )
+        )
+        labels.append(
+            Label(vec(5 * SW // 6, 100 + (i * 20)), vec(SW - 10, 100), str(s))
+        )
+
     # lab_surf = pygame.Surface((gui_scroll_area.w, len(songs)*100)).convert_alpha()
     # lab_surf.set_colorkey((0, 0, 0))
     # for l in labels:
     #     l.draw(lab_surf, (255, 255, 255))
 
     if len(scores) <= 0:
-        labels.append(Label(vec(SW//2, SH//2), vec(SW-10, 100), "NO DATA FOUND"))
+        labels.append(Label(vec(SW // 2, SH // 2), vec(SW - 10, 100), "NO DATA FOUND"))
 
     while True:
         scroll.y += 5
@@ -1160,13 +1459,13 @@ def high_score():
                 transitioning = False
                 return tr_go_to
 
-        gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom//2)
+        gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom // 2)
 
         ## CLICKS
         if back_button.clicked() and not transitioning:
             tr_go_to = "menu"
             tr_close_start = True
-        
+
         ## drawing
 
         draw_background_circles(circles, circle_color, back_color, scroll)
@@ -1174,20 +1473,35 @@ def high_score():
         for l in labels:
             l.draw(screen, (255, 255, 255), gui_scroll, gui_scroll_area)
 
-        back_button.draw(screen, (255, 255, 255), back_color.lerp((155, 100, 100), 0.25), (255, 140, 97), (0, 0, 0))
+        back_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
 
         title_txt = title_font.render("HIGH SCORES", False, (255, 255, 255))
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
 
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect1, border_radius=10)
-        pygame.draw.rect(screen, pygame.Color(255, 255, 255).lerp(back_color, 0.5), tr_rect2, border_radius=10)
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
 
         ## WINDOW UPDATING
         screen.blit(vig, (0, 0))
         window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
         clock.tick(45)
         pygame.display.update()
-
 
 
 ## THREADS
@@ -1223,7 +1537,7 @@ pygame.mixer.music.load(music_path)
 pygame.mixer.music.set_volume(data["volume"] / 100)
 pygame.mixer.music.play(loops=-1)
 
-scene = "splash"
+scene = "menu"
 
 while True:
     if scene == "splash":

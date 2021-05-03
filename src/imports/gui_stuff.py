@@ -41,6 +41,45 @@ class RectButton:
         )
 
 
+class RectButtonImg:
+    def __init__(self, cpos, size, img, border_radius=15):
+        self.rect = pygame.Rect(cpos.x - size.x // 2, cpos.y - size.y // 2, size.x, size.y)
+        self.border_radius = border_radius
+        self.image = img
+
+    def clicked(self, clicke):
+        if self.hovered() and clicke:
+            return True
+        else:
+            return False
+
+    def hovered(self):
+        mx, my = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mx // 2, my // 2):
+            return True
+        return False
+
+    def draw(self, screen, color, hover_color, click_color, clicke):
+        if clicke and self.hovered():
+            pygame.draw.rect(screen, click_color, self.rect, border_top_left_radius=self.border_radius,
+                             border_bottom_right_radius=self.border_radius)
+            clicke = False
+        elif self.hovered():
+            pygame.draw.rect(screen, hover_color, self.rect, border_top_left_radius=self.border_radius,
+                             border_bottom_right_radius=self.border_radius)
+        else:
+            pygame.draw.rect(screen, color, self.rect, border_top_left_radius=self.border_radius,
+                             border_bottom_right_radius=self.border_radius)
+        screen.blit(
+            self.image,
+            (
+                self.rect.centerx - self.image.get_rect().width // 2,
+                self.rect.centery - self.image.get_rect().height // 2
+            )
+        )
+        return clicke
+
+
 class CheckBox:
     def __init__(self, center, size, text, checked=True):
         self.rect = pygame.Rect((0, 0), size)

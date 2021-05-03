@@ -128,5 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .idea/
-src/assets/data/*
+src/.vscode/
+src/assets/data/
+
 
