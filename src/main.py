@@ -349,10 +349,8 @@ def game():
 
         screen.blit(vig, (0, 0))
         window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        rp.update_rich_presence(f"Score: {score}, Music: {music_name}")
         clock.tick(45)
-        playtime[2] = int(seconds)
-        # playtime[1] = 
-        rp.update_rich_presence(f"Score:{score}, Music:{music_name}")
         pygame.display.update()
 
 
