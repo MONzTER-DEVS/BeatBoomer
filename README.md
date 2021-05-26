@@ -24,8 +24,6 @@
 
 <br>
 
-## **NOTE**
-This (awesome :P) project is still under active development, so if you have any suggestions, want to get latest updates before everyone else, or want to just have a talk with us, join our [Discord Server](https://discord.gg/JWsuCXSwnp)!
+## **Boom!**
+Join our [Discord Server](https://discord.gg/JWsuCXSwnp) for more EPIC games like this :)
 <br>
-
-Just to let you know, we have many things planned for this game ;)
