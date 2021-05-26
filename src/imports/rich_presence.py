@@ -10,7 +10,7 @@ class RichPresence:
         self.frame = 0
         self.RPC.update(
             state="Just started Playing...",
-            details="Rhythm based hyper-casual game written in python!",
+            details="Rhythm based hyper-casual game.",
             large_image="beatnboomwithbackbig",
             buttons=[{"label": "Download Now!", "url": "https://monzter-games.itch.io/beat-n-boom"}]
         )
@@ -22,7 +22,7 @@ class RichPresence:
             # print("UPDATING RP...")
             self.RPC.update(
                 state=state,
-                details="Rhythm based hyper-casual game written in python!",
+                details="Rhythm based hyper-casual game.",
                 large_image="beatnboomwithbackbig",
                 buttons=[{"label": "Download Now!", "url": "https://monzter-games.itch.io/beat-n-boom"}]
             )
