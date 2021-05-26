@@ -12,6 +12,7 @@ class RichPresence:
             state="Just started Playing...",
             details="Rhythm based hyper-casual game written in python!",
             large_image="beatnboomwithbackbig",
+            buttons=[{"label": "Download Now!", "url": "https://monzter-games.itch.io/beat-n-boom"}]
         )
 
     def update_rich_presence(self, state: str):
