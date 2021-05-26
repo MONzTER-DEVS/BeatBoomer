@@ -9,7 +9,7 @@ on:
 
 jobs:
 
-  create-executables:
+  compile-executables:
     name: Create executables
     runs-on: ${{ matrix.os }}
     strategy:
@@ -21,7 +21,7 @@ jobs:
             file-copy-command: mkdir src\dist\assets && xcopy src\assets src\dist\assets /s
             architecture: x86
             cachepath: ~\AppData\Local\pip\Cache
-            pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x86_64/lib/site-packages/librosa/util/example_data;librosa/util/example_data" --icon assets\icon.ico
+            pyinstaller-options: --add-data "c:/hostedtoolcache/windows/python/3.7.9/x86/lib/site-packages/librosa/util/example_data;librosa/util/example_data" --icon assets\icon.ico
 #            executable-name: src\dist\BeatNBoom.exe
 
           - os: windows-latest
