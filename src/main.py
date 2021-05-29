@@ -371,9 +371,12 @@ def menu():
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    play_button = RectButton(vec(SW // 2, SH-110), vec(100, 25), "PLAY")
+    play_button = RectButton(vec(SW // 2, SH - 130), vec(100, 25), "PLAY")
+    more_games_button = RectButton(
+        vec(SW // 2, play_button.rect.bottom + 15), vec(100, 25), "MORE GAMES"
+    )
     high_scr_button = RectButton(
-        vec(SW // 2, play_button.rect.bottom + 15), vec(100, 25), "SCORES"
+        vec(SW // 2, more_games_button.rect.bottom + 15), vec(100, 25), "SCORES"
     )
     settings_button = RectButton(
         vec(SW // 2, high_scr_button.rect.bottom + 15), vec(100, 25), "SETTINGS"
@@ -382,14 +385,14 @@ def menu():
         vec(SW // 2, settings_button.rect.bottom + 15), vec(100, 25), "QUIT"
     )
     disc_button = RectButtonImg(
-        vec(SW-30, SH-30),
+        vec(SW - 30, SH - 30),
         vec(40, 40),
         pygame.image.load(
             os.path.join("assets", "Discord-Logo-Black.png")
         ).convert_alpha()
     )
     github_button = RectButtonImg(
-        vec(30, SH-30),
+        vec(30, SH - 30),
         vec(40, 40),
         pygame.image.load(
             os.path.join("assets", "GitHub-Mark.png")
@@ -427,6 +430,10 @@ def menu():
             tr_go_to = "game"
             tr_close_start = True
 
+        if more_games_button.clicked() and not transitioning:
+            tr_go_to = "more_games"
+            tr_close_start = True
+
         if high_scr_button.clicked() and not transitioning:
             tr_go_to = "high_score"
             tr_close_start = True
@@ -437,7 +444,7 @@ def menu():
 
         if disc_button.clicked(clicked) and not transitioning:
             webbrowser.open("https://discord.gg/JWsuCXSwnp")
-        
+
         if github_button.clicked(clicked) and not transitioning:
             webbrowser.open("https://github.com/monzter-devs/")
 
@@ -482,6 +489,15 @@ def menu():
             (255, 140, 97),
             (0, 0, 0),
         )
+
+        more_games_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+
         settings_button.draw(
             screen,
             (255, 255, 255),
@@ -516,7 +532,7 @@ def menu():
             screen,
             (255, 255, 255),
             back_color.lerp((155, 100, 100), 0.25),
-            (255, 140, 97), 
+            (255, 140, 97),
             clicked
         )
 
@@ -1122,6 +1138,7 @@ def high_score():
 change_music_thread = threading.Thread(target=change_music)
 change_music_thread.setDaemon(True)
 
+
 ## SCORE DEBUG THINGY
 # for i in range(10, 20):
 #     high_scores.save_score("song"+str(i), i*10)
@@ -1153,19 +1170,58 @@ pygame.mixer.music.play(loops=-1)
 
 scene = "splash"
 
+
+def more_games():
+    title_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30
+    )
+
+    scroll = vec()
+
+    circles = spawn_background_circles()
+    circle_color = pygame.Color(255, 255, 255)
+
+    back_color = pygame.Color(155, 100, 100)
+
+    while True:
+        screen.fill(back_color)
+        draw_background_circles(circles, circle_color, back_color, scroll)
+
+        # for event in pygame.event.get():
+        #     clicked = False
+        #     if event.type == pygame.MOUSEBUTTONDOWN:
+        #         clicked = True
+        #
+        #     elif event.type == pygame.QUIT:
+        #         pygame.quit()
+        #         sys.exit()
+
+        pygame.display.update()
+
+
 while True:
     if scene == "splash":
         scene = splash()
+
     elif scene == "menu":
         scene = menu()
+
     elif scene == "game":
         scene = game()
+
     elif scene == "settings":
         scene = settings()
+
     elif scene == "loading":
         scene = loading(change_music_thread, "menu")
+
     elif scene == "high_score":
         scene = high_score()
+
+    elif scene == "more_games":
+        print(scene)
+        scene = more_games()
+
     elif scene == "exit":
         rp.RPC.clear()
         rp.RPC.close()
