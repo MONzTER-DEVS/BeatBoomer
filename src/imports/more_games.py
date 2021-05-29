@@ -4,7 +4,6 @@ import urllib.request
 import pygame
 from copy import deepcopy
 
-
 def get_image(image_url):
     r = requests.get(image_url)
     img = io.BytesIO(r.content)
@@ -13,7 +12,11 @@ def get_image(image_url):
 
 def get_more_games():
     data = requests.get("https://monzter-devs.github.io/MONzTER-DEVS.api/more_from_creator.json").json()
+    try:
+        del data["games"]["beat n boom"]
 
+    except:
+        pass
     games = deepcopy(data["games"])
 
     for game_name in games:
@@ -26,5 +29,3 @@ def get_more_games():
 
     return data["games"]
 
-
-print(get_more_games())
