@@ -17,6 +17,7 @@ from imports.gui_stuff import RectButton, CheckBox, Slider, Label, RectButtonImg
 from imports.load_music import load_music
 from imports.particles import ParticleSystem
 from imports.rich_presence import RichPresence
+from imports.more_games import get_more_games
 import imports.high_scores as high_scores
 
 pygame.init()
@@ -1298,7 +1299,6 @@ while True:
         scene = high_score()
 
     elif scene == "more_games":
-        print(scene)
         scene = more_games()
 
     elif scene == "exit":
