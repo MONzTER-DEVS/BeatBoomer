@@ -1172,32 +1172,111 @@ scene = "splash"
 
 
 def more_games():
+    ## FONTS
     title_font = pygame.font.Font(
         os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30
     )
+    # norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 15)
 
+    ## BEAT STUFF
+    BEAT_EVENT = pygame.USEREVENT + 1
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
+
+    ## WINDOW STUFF
     scroll = vec()
+    back_color = pygame.Color(155, 100, 100)
 
+    ## BACK CIRCLES
     circles = spawn_background_circles()
     circle_color = pygame.Color(255, 255, 255)
 
-    back_color = pygame.Color(155, 100, 100)
+    back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2.bottom = SH
+    tr_go_to = "menu"
 
     while True:
+        scroll.y += 5
         screen.fill(back_color)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                return "exit"
+            if event.type == BEAT_EVENT and data["back_change"]:
+                back_color.r = random.randint(50, 100)
+                back_color.g = random.randint(50, 100)
+                back_color.b = random.randint(50, 100)
+            # else:
+            #     gui_scroll.y = 0
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                return tr_go_to
+
+        ## CLICKS
+        if back_button.clicked() and not transitioning:
+            tr_go_to = "menu"
+            tr_close_start = True
+
+        ## drawing
+
         draw_background_circles(circles, circle_color, back_color, scroll)
 
-        # for event in pygame.event.get():
-        #     clicked = False
-        #     if event.type == pygame.MOUSEBUTTONDOWN:
-        #         clicked = True
-        #
-        #     elif event.type == pygame.QUIT:
-        #         pygame.quit()
-        #         sys.exit()
+        back_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
 
+        title_txt = title_font.render("More Games", False, (255, 255, 255))
+        screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
+
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
+
+        ## WINDOW UPDATING
+        screen.blit(vig, (0, 0))
+        window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        rp.update_rich_presence("Staring at other games by MonZteR Games...")
+        clock.tick(45)
         pygame.display.update()
-
+    
 
 while True:
     if scene == "splash":
