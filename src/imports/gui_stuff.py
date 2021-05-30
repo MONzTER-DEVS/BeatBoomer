@@ -1,4 +1,5 @@
 import pygame, os
+from pygame.math import Vector2 as vec
 
 FONT_SIZE = 15
 
@@ -6,6 +7,7 @@ FONT_SIZE = 15
 class RectButton:
     def __init__(self, cpos, size, text, border_radius=15):
         self.rect = pygame.Rect(cpos.x - size.x // 2, cpos.y - size.y // 2, size.x, size.y)
+        self.original_rect = self.rect.copy()
         self.border_radius = border_radius
         self.text = text
         self.font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), FONT_SIZE)
@@ -21,7 +23,8 @@ class RectButton:
             return True
         return False
 
-    def draw(self, screen, color, hover_color, click_color, font_color):
+    def draw(self, screen, color, hover_color, click_color, font_color, scroll=vec()):
+        self.rect.topleft = self.original_rect.topleft - scroll
         if self.clicked():
             pygame.draw.rect(screen, click_color, self.rect, border_top_left_radius=self.border_radius,
                              border_bottom_right_radius=self.border_radius)
@@ -44,6 +47,7 @@ class RectButton:
 class RectButtonImg:
     def __init__(self, cpos, size, img, border_radius=15):
         self.rect = pygame.Rect(cpos.x - size.x // 2, cpos.y - size.y // 2, size.x, size.y)
+        self.original_rect = self.rect.copy()
         self.border_radius = border_radius
         self.image = img
 
@@ -59,7 +63,8 @@ class RectButtonImg:
             return True
         return False
 
-    def draw(self, screen, color, hover_color, click_color, clicke):
+    def draw(self, screen, color, hover_color, click_color, clicke, scroll=vec()):
+        self.rect.topleft = self.original_rect.topleft - scroll
         if clicke and self.hovered():
             pygame.draw.rect(screen, click_color, self.rect, border_top_left_radius=self.border_radius,
                              border_bottom_right_radius=self.border_radius)
@@ -184,6 +189,5 @@ class Label:
         txt_img = self.font.render(self.text, False, color).convert_alpha()
         if area.collidepoint((self.rect.midtop[0] - txt_img.get_width() // 2)-scroll.x, self.rect.y-scroll.y):
             screen.blit(txt_img, ((self.rect.midtop[0] - txt_img.get_width() // 2)-scroll.x, self.rect.y-scroll.y))
-
 
 

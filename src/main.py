@@ -1169,7 +1169,6 @@ pygame.mixer.music.load(music_path)
 pygame.mixer.music.set_volume(data["volume"] / 100)
 pygame.mixer.music.play(loops=-1)
 
-scene = "splash"
 
 
 def more_games():
@@ -1202,6 +1201,34 @@ def more_games():
     tr_rect2.bottom = SH
     tr_go_to = "menu"
 
+    games = get_more_games()
+
+    game_names = [k for k in games.keys()]
+
+    gui_scroll = vec(0, 0)
+    gui_scroll_area = pygame.Rect(0, 30, SW, SH - 70)
+
+    labels = []
+    buttons = []
+    for i, y in zip(game_names, range(1, len(game_names)+1)):
+        l = Label(
+                vec(SW // 2, 75+(y * 100)),
+                vec(SW - 10, 100),
+                i.capitalize()
+            )
+        labels.append(l)
+        buttons.append(
+            RectButton(
+                vec(l.rect.centerx, l.rect.centery - 10),
+                vec(120, 25),
+                "Download Now!"
+            )
+        )
+        # back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
+        #labels.append(
+        #    Label(vec(5 * SW // 6, 100 + (i * 20)), vec(SW - 10, 100), str(s))
+        #)
+    current_game_img = games[game_names[0]]['image_surface']
     while True:
         scroll.y += 5
         screen.fill(back_color)
@@ -1214,8 +1241,8 @@ def more_games():
                 back_color.r = random.randint(50, 100)
                 back_color.g = random.randint(50, 100)
                 back_color.b = random.randint(50, 100)
-            # else:
-            #     gui_scroll.y = 0
+            if event.type == pygame.MOUSEWHEEL:
+                gui_scroll.y -= event.y * 20
 
         ## OPENING TRANSITION
         if tr_open_start:
@@ -1239,13 +1266,33 @@ def more_games():
                 return tr_go_to
 
         ## CLICKS
+        gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom // 2)
         if back_button.clicked() and not transitioning:
             tr_go_to = "menu"
             tr_close_start = True
+        for button, name in zip(buttons, game_names):
+            if button.hovered():
+                current_game_img = games[name]['image_surface']
+            if button.clicked():
+                # print(games[name]['download_link'])
+                webbrowser.open(games[name]['download_link'])
+                pygame.time.wait(500)
 
         ## drawing
 
+        screen.blit(current_game_img, (-gui_scroll.x//5, -gui_scroll.y//5))
         draw_background_circles(circles, circle_color, back_color, scroll)
+        for l in labels:
+            l.draw(screen, (255, 255, 255), gui_scroll, gui_scroll_area)
+        for b in buttons:
+            b.draw(
+                screen,
+                (255, 255, 255),
+                back_color.lerp((155, 100, 100), 0.25),
+                (255, 140, 97),
+                (0, 0, 0),
+                gui_scroll
+            )
 
         back_button.draw(
             screen,
@@ -1278,6 +1325,7 @@ def more_games():
         clock.tick(45)
         pygame.display.update()
     
+scene = "more_games"
 
 while True:
     if scene == "splash":
