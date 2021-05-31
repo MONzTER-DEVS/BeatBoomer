@@ -1170,9 +1170,8 @@ pygame.mixer.music.set_volume(data["volume"] / 100)
 pygame.mixer.music.play(loops=-1)
 
 
-
 def more_games():
-    ## FONTS
+    # FONTS
     title_font = pygame.font.Font(
         os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30
     )
@@ -1210,12 +1209,12 @@ def more_games():
 
     labels = []
     buttons = []
-    for i, y in zip(game_names, range(1, len(game_names)+1)):
+    for i, y in zip(game_names, range(1, len(game_names) + 1)):
         l = Label(
-                vec(SW // 2, 75+(y * 100)),
-                vec(SW - 10, 100),
-                i.capitalize()
-            )
+            vec(SW // 2, 75 + (y * 100)),
+            vec(SW - 10, 100),
+            i.capitalize()
+        )
         labels.append(l)
         buttons.append(
             RectButton(
@@ -1225,13 +1224,15 @@ def more_games():
             )
         )
         # back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
-        #labels.append(
+        # labels.append(
         #    Label(vec(5 * SW // 6, 100 + (i * 20)), vec(SW - 10, 100), str(s))
-        #)
+        # )
     current_game_img = games[game_names[0]]['image_surface']
+    title_txt = title_font.render("More Games", False, (255, 255, 255))
     while True:
         scroll.y += 5
         screen.fill(back_color)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -1280,7 +1281,7 @@ def more_games():
 
         ## drawing
 
-        screen.blit(current_game_img, (-gui_scroll.x//5, -gui_scroll.y//5))
+        screen.blit(current_game_img, (-gui_scroll.x // 5, -gui_scroll.y // 5))
         draw_background_circles(circles, circle_color, back_color, scroll)
         for l in labels:
             l.draw(screen, (255, 255, 255), gui_scroll, gui_scroll_area)
@@ -1302,7 +1303,7 @@ def more_games():
             (0, 0, 0),
         )
 
-        title_txt = title_font.render("More Games", False, (255, 255, 255))
+        # title_txt = title_font.render("More Games", False, (255, 255, 255))
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
 
         pygame.draw.rect(
@@ -1324,10 +1325,133 @@ def more_games():
         rp.update_rich_presence("Staring at other games by MonZteR Games...")
         clock.tick(45)
         pygame.display.update()
-    
-scene = "more_games"
 
+
+def more_games_2():
+    # FONTS
+    title_font = pygame.font.Font(
+        os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30
+    )
+    norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 17)
+
+    ## BEAT STUFF
+    BEAT_EVENT = pygame.USEREVENT + 1
+    tempo = beat_times[len(beat_times) // 2 + 1] - beat_times[len(beat_times) // 2]
+    pygame.time.set_timer(BEAT_EVENT, int((tempo) * 1000))
+
+    ## WINDOW STUFF
+    scroll = vec()
+    back_color = pygame.Color(155, 100, 100)
+
+    ## BACK CIRCLES
+    circles = spawn_background_circles()
+    circle_color = pygame.Color(255, 255, 255)
+
+    back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
+
+    tr_close_start = False
+    tr_open_start = True
+    transitioning = True
+    tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
+    tr_rect2.bottom = SH
+    tr_go_to = "menu"
+
+    game_data_unavailable_text = norm_font.render("Service currently unavailable", True, (255, 255, 255))
+    game_data_unavailable_rect = game_data_unavailable_text.get_rect(center=(SW // 2, SH // 2))
+    gui_scroll = vec(0, 0)
+    gui_scroll_area = pygame.Rect(0, 30, SW, SH - 70)
+    title_txt = title_font.render("More Games", False, (255, 255, 255))
+
+    try:
+        games = get_more_games()
+        game_names = [k for k in games.keys()]
+    except:
+        games = None
+        game_names = []
+
+    current_game_index = 0
+
+    while True:
+        scroll.y += 5
+        screen.fill(back_color)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                return "exit"
+            if event.type == BEAT_EVENT and data["back_change"]:
+                back_color.r = random.randint(50, 100)
+                back_color.g = random.randint(50, 100)
+                back_color.b = random.randint(50, 100)
+            if event.type == pygame.MOUSEWHEEL:
+                gui_scroll.y -= event.y * 20
+
+        ## OPENING TRANSITION
+        if tr_open_start:
+            transitioning = True
+            tr_rect1.h -= 10
+            tr_rect2.h -= 10
+            tr_rect2.bottom = SH
+            if tr_rect1.bottom < 0 or tr_rect2.top > SH:
+                tr_open_start = False
+                transitioning = False
+
+        ## CLOSING TRANSITION
+        if tr_close_start:
+            transitioning = True
+            tr_rect1.h += 10
+            tr_rect2.h += 10
+            tr_rect2.bottom = SH
+            if tr_rect1.colliderect(tr_rect2):
+                tr_close_start = False
+                transitioning = False
+                return tr_go_to
+
+        # gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom // 2)
+
+        if back_button.clicked() and not transitioning:
+            tr_go_to = "menu"
+            tr_close_start = True
+
+        draw_background_circles(circles, circle_color, back_color, scroll)
+
+        back_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect1,
+            border_radius=10,
+        )
+        pygame.draw.rect(
+            screen,
+            pygame.Color(255, 255, 255).lerp(back_color, 0.5),
+            tr_rect2,
+            border_radius=10,
+        )
+
+        if games is None:
+            screen.blit(game_data_unavailable_text, game_data_unavailable_rect)
+
+        screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
+        screen.blit(vig, (0, 0))
+        window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
+        rp.update_rich_presence("Staring at other games by MonZteR Games...")
+        clock.tick(45)
+        pygame.display.update()
+
+
+scene = "more_games"
 while True:
+
     if scene == "splash":
         scene = splash()
 
@@ -1347,7 +1471,8 @@ while True:
         scene = high_score()
 
     elif scene == "more_games":
-        scene = more_games()
+        # scene = more_games()
+        scene = more_games_2()
 
     elif scene == "exit":
         rp.RPC.clear()
