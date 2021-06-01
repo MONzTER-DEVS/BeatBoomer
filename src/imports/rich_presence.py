@@ -6,7 +6,12 @@ class RichPresence:
     def __init__(self):
         client_id = "846786017260208129"
         self.RPC = Presence(client_id)  # Initialize the client class
-        self.RPC.connect()  # Start the handshake loop
+        try:
+            self.RPC.connect()  # Start the handshake loop
+
+        except:
+            pass
+
         self.frame = 0
         try:
             self.RPC.update(
@@ -30,5 +35,6 @@ class RichPresence:
                     large_image="beatnboomwithbackbig",
                     buttons=[{"label": "Download Now!", "url": "https://monzter-games.itch.io/beat-n-boom"}]
                 )
-            except Exception as e:
+
+            except Exception:
                 pass

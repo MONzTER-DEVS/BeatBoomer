@@ -19,7 +19,7 @@ from imports.particles import ParticleSystem
 from imports.rich_presence import RichPresence
 from imports.more_games import get_more_games
 import imports.high_scores as high_scores
-
+from imports.debug import debug
 pygame.init()
 pygame.mixer.init()
 rp = RichPresence()
@@ -45,6 +45,7 @@ sfx_hit = pygame.mixer.Sound(os.path.join("assets", "sfx", "crash5.wav"))
 sfx_crash.set_volume(0.1)
 sfx_boom.set_volume(0.1)
 sfx_hit.set_volume(0.5)
+
 
 
 def set_sfx_vol(percent):
@@ -1319,13 +1320,15 @@ def more_games():
         clock.tick(45)
         pygame.display.update()
 
+def draw_rect_bounding_box(rect, screen):
+    pygame.draw.rect(screen, (255, 0, 0), (*rect.topleft, rect.w, rect.h), 2)
 
 def more_games_2():
     # FONTS
-    title_font = pygame.font.Font(
-        os.path.join("assets/fonts", "Roboto", "Roboto-BoldItalic.ttf"), 30
-    )
-    norm_font = pygame.font.Font(os.path.join("assets/fonts", "Roboto", "Roboto-Thin.ttf"), 17)
+    font_dir = os.path.join("assets", "fonts", "Roboto")
+
+    title_font = pygame.font.Font(os.path.join(font_dir, "Roboto-BoldItalic.ttf"), 30)
+    norm_font = pygame.font.Font(os.path.join(font_dir, "Roboto-Thin.ttf"), 17)
 
     ## BEAT STUFF
     BEAT_EVENT = pygame.USEREVENT + 1
@@ -1363,8 +1366,27 @@ def more_games_2():
         games = None
         game_names = []
 
-    current_game_index = 0
+    arrow_image = pygame.image.load("assets/arrow.png")
 
+    arrow_right = pygame.transform.rotate(arrow_image, 90)
+    arrow_right_rect = arrow_right.get_rect(center=(60, SH//2))
+
+    arrow_left = pygame.transform.rotate(arrow_right, 180)
+    arrow_left_rect = arrow_left.get_rect(center=(SW-60, SH//2))
+
+    arrow_right_rect.x = 10
+    arrow_left_rect.x = SW-50
+
+    cg_index = 0
+    cg_name = game_names[cg_index]
+    cg_data = games[cg_name]
+
+    cg_image = cg_data["image_surface"]
+    cg_image = pygame.transform.scale(cg_image, (130, 130))
+    cg_image_rect = cg_image.get_rect(center=(SW // 2, 0))
+    cg_image_rect.top = 40
+
+    exiting = False
     while True:
         scroll.y += 5
         screen.fill(back_color)
@@ -1399,17 +1421,41 @@ def more_games_2():
             tr_rect2.h += 10
             tr_rect2.bottom = SH
             if tr_rect1.colliderect(tr_rect2):
+                if exiting:
+                    return tr_go_to
+
                 tr_close_start = False
-                transitioning = False
-                return tr_go_to
+                tr_open_start = True
+                transitioning = True
+                tr_rect1 = pygame.Rect(0, 0, SW, SH // 2)
+                tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
+                tr_rect2.bottom = SH
 
         # gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom // 2)
 
         if back_button.clicked() and not transitioning:
             tr_go_to = "menu"
             tr_close_start = True
+            exiting = True
 
         draw_background_circles(circles, circle_color, back_color, scroll)
+
+        # more games content here
+        if games is None:
+            screen.blit(game_data_unavailable_text, game_data_unavailable_rect)
+
+        else:
+            # screen.blit(cg_name_surf, cg_name_rect)
+            screen.blit(cg_image, cg_image_rect)
+
+            screen.blit(arrow_left, arrow_left_rect)
+            screen.blit(arrow_right, arrow_right_rect)
+            if debug:
+                draw_rect_bounding_box(cg_image_rect, screen)
+                draw_rect_bounding_box(arrow_right_rect, screen)
+                draw_rect_bounding_box(arrow_left_rect, screen)
+
+        # more games content end
 
         back_button.draw(
             screen,
@@ -1431,9 +1477,6 @@ def more_games_2():
             tr_rect2,
             border_radius=10,
         )
-
-        if games is None:
-            screen.blit(game_data_unavailable_text, game_data_unavailable_rect)
 
         screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
         screen.blit(vig, (0, 0))
