@@ -216,7 +216,6 @@ def game():
             if event.type == pygame.QUIT:
                 high_scores.save_score(music_name, score)
                 pygame.quit()
-                sys.exit()
                 return "exit"
 
             if event.type == pygame.KEYDOWN:
@@ -416,7 +415,6 @@ def menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
                 return "exit"
             if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
@@ -612,7 +610,6 @@ def settings():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
                 return "exit"
             if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
@@ -784,7 +781,6 @@ def loading(thread, nxt_scene):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
                 return "exit"
             # if event.type == BEAT_EVENT and data["back_change"]:
             #     back_color.r = random.randint(50, 100)
@@ -921,7 +917,6 @@ def splash():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
                 return "exit"
             if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
@@ -1057,7 +1052,6 @@ def high_score():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
                 return "exit"
             if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
@@ -1236,7 +1230,6 @@ def more_games():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
                 return "exit"
             if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
@@ -1379,8 +1372,9 @@ def more_games_2():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
+
                 return "exit"
+
             if event.type == BEAT_EVENT and data["back_change"]:
                 back_color.r = random.randint(50, 100)
                 back_color.g = random.randint(50, 100)
@@ -1479,4 +1473,3 @@ while True:
         rp.RPC.close()
         pygame.quit()
         sys.exit()
-        break
