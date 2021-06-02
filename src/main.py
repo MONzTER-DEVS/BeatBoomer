@@ -13,13 +13,14 @@ import math
 import webbrowser
 from pygame.math import Vector2 as vec
 
-from imports.gui_stuff import RectButton, CheckBox, Slider, Label, RectButtonImg
+from imports.gui_stuff import RectButton, CheckBox, Slider, Label, RectButtonImg, Button
 from imports.load_music import load_music
 from imports.particles import ParticleSystem
 from imports.rich_presence import RichPresence
 from imports.more_games import get_more_games
 import imports.high_scores as high_scores
 from imports.debug import debug
+
 pygame.init()
 pygame.mixer.init()
 rp = RichPresence()
@@ -45,7 +46,6 @@ sfx_hit = pygame.mixer.Sound(os.path.join("assets", "sfx", "crash5.wav"))
 sfx_crash.set_volume(0.1)
 sfx_boom.set_volume(0.1)
 sfx_hit.set_volume(0.5)
-
 
 
 def set_sfx_vol(percent):
@@ -1320,8 +1320,10 @@ def more_games():
         clock.tick(45)
         pygame.display.update()
 
+
 def draw_rect_bounding_box(rect, screen):
     pygame.draw.rect(screen, (255, 0, 0), (*rect.topleft, rect.w, rect.h), 2)
+
 
 def more_games_2():
     # FONTS
@@ -1368,14 +1370,17 @@ def more_games_2():
 
     arrow_image = pygame.image.load("assets/arrow.png")
 
-    arrow_right = pygame.transform.rotate(arrow_image, 90)
-    arrow_right_rect = arrow_right.get_rect(center=(60, SH//2))
+    arrow_right = pygame.transform.rotate(arrow_image, -90)
+    arrow_right = Button(arrow_right, SW - 50, (SH // 2) - 20, (35, 35))
 
-    arrow_left = pygame.transform.rotate(arrow_right, 180)
-    arrow_left_rect = arrow_left.get_rect(center=(SW-60, SH//2))
+    arrow_left = pygame.transform.rotate(arrow_image, 90)
+    arrow_left = Button(arrow_left, 10, (SH // 2) - 20, (35, 35))
 
-    arrow_right_rect.x = 10
-    arrow_left_rect.x = SW-50
+    # arrow_right_rect = arrow_right.get_rect(center=(60, SH // 2))
+    # arrow_left = pygame.transform.rotate(arrow_right, 180)
+    # arrow_left_rect = arrow_left.get_rect(center=(SW - 60, SH // 2))
+    # arrow_right_rect.x = 10
+    # arrow_left_rect.x = SW - 50
 
     cg_index = 0
     cg_name = game_names[cg_index]
@@ -1390,6 +1395,9 @@ def more_games_2():
     while True:
         scroll.y += 5
         screen.fill(back_color)
+        mx, my = pygame.mouse.get_pos()
+        mouse_rect = pygame.Rect(mx // 2, my // 2, 1, 1)
+        clicked = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1403,6 +1411,10 @@ def more_games_2():
                 back_color.b = random.randint(50, 100)
             if event.type == pygame.MOUSEWHEEL:
                 gui_scroll.y -= event.y * 20
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                clicked = True
+
 
         ## OPENING TRANSITION
         if tr_open_start:
@@ -1431,6 +1443,13 @@ def more_games_2():
                 tr_rect2 = pygame.Rect(0, 0, SW, SH // 2)
                 tr_rect2.bottom = SH
 
+                cg_name = game_names[cg_index]
+                cg_data = games[cg_name]
+                cg_image = cg_data["image_surface"]
+                cg_image = pygame.transform.scale(cg_image, (130, 130))
+
+
+
         # gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom // 2)
 
         if back_button.clicked() and not transitioning:
@@ -1448,8 +1467,17 @@ def more_games_2():
             # screen.blit(cg_name_surf, cg_name_rect)
             screen.blit(cg_image, cg_image_rect)
 
-            screen.blit(arrow_left, arrow_left_rect)
-            screen.blit(arrow_right, arrow_right_rect)
+            arrow_right.draw(screen, mouse_rect)
+            arrow_left.draw(screen,mouse_rect)
+
+            if arrow_right.hover(mouse_rect) and clicked:
+                cg_index += 1
+                tr_close_start = True
+
+            if arrow_left.hover(mouse_rect) and clicked:
+                cg_index -= 1
+                tr_close_start = True
+
             if debug:
                 draw_rect_bounding_box(cg_image_rect, screen)
                 draw_rect_bounding_box(arrow_right_rect, screen)
