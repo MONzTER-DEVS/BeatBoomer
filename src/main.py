@@ -1346,6 +1346,7 @@ def more_games_2():
     circle_color = pygame.Color(255, 255, 255)
 
     back_button = RectButton(vec(SW // 2, SH - 25), vec(100, 25), "BACK")
+    download_button = RectButton(vec(SW // 2, SH - 55), vec(100, 25), "DOWNLOAD")
 
     tr_close_start = False
     tr_open_start = True
@@ -1415,7 +1416,6 @@ def more_games_2():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 clicked = True
 
-
         ## OPENING TRANSITION
         if tr_open_start:
             transitioning = True
@@ -1448,14 +1448,15 @@ def more_games_2():
                 cg_image = cg_data["image_surface"]
                 cg_image = pygame.transform.scale(cg_image, (130, 130))
 
-
-
         # gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom // 2)
 
         if back_button.clicked() and not transitioning:
             tr_go_to = "menu"
             tr_close_start = True
             exiting = True
+
+        if clicked and download_button.clicked() and not transitioning:
+            webbrowser.open(cg_data["download_link"])
 
         draw_background_circles(circles, circle_color, back_color, scroll)
 
@@ -1468,14 +1469,22 @@ def more_games_2():
             screen.blit(cg_image, cg_image_rect)
 
             arrow_right.draw(screen, mouse_rect)
-            arrow_left.draw(screen,mouse_rect)
+            arrow_left.draw(screen, mouse_rect)
 
             if arrow_right.hover(mouse_rect) and clicked:
                 cg_index += 1
+
+                if cg_index == len(game_names):
+                    cg_index = 0
+
                 tr_close_start = True
 
             if arrow_left.hover(mouse_rect) and clicked:
                 cg_index -= 1
+
+                if cg_index < 0:
+                    cg_index = len(game_names) - 1
+
                 tr_close_start = True
 
             if debug:
@@ -1493,6 +1502,16 @@ def more_games_2():
             (0, 0, 0),
         )
 
+        download_button.draw(
+            screen,
+            (255, 255, 255),
+            back_color.lerp((155, 100, 100), 0.25),
+            (255, 140, 97),
+            (0, 0, 0),
+        )
+
+        screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
+
         pygame.draw.rect(
             screen,
             pygame.Color(255, 255, 255).lerp(back_color, 0.5),
@@ -1506,7 +1525,6 @@ def more_games_2():
             border_radius=10,
         )
 
-        screen.blit(title_txt, (SW // 2 - title_txt.get_width() // 2, 0))
         screen.blit(vig, (0, 0))
         window.blit(pygame.transform.scale(screen, (WW, WH)), (0, 0))
         rp.update_rich_presence("Staring at other games by MonZteR Games...")
