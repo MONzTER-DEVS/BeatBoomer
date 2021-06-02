@@ -1393,6 +1393,8 @@ def more_games_2():
     cg_image_rect.top = 40
 
     exiting = False
+    games_count = len(games)
+
     while True:
         scroll.y += 5
         screen.fill(back_color)
@@ -1471,7 +1473,7 @@ def more_games_2():
             arrow_right.draw(screen, mouse_rect)
             arrow_left.draw(screen, mouse_rect)
 
-            if arrow_right.hover(mouse_rect) and clicked:
+            if arrow_right.hover(mouse_rect) and clicked and not transitioning:
                 cg_index += 1
 
                 if cg_index == len(game_names):
@@ -1479,7 +1481,7 @@ def more_games_2():
 
                 tr_close_start = True
 
-            if arrow_left.hover(mouse_rect) and clicked:
+            if arrow_left.hover(mouse_rect) and clicked and not transitioning:
                 cg_index -= 1
 
                 if cg_index < 0:
