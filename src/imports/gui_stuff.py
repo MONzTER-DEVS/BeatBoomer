@@ -187,7 +187,68 @@ class Label:
 
     def draw(self, screen, color, scroll, area):
         txt_img = self.font.render(self.text, False, color).convert_alpha()
-        if area.collidepoint((self.rect.midtop[0] - txt_img.get_width() // 2)-scroll.x, self.rect.y-scroll.y):
-            screen.blit(txt_img, ((self.rect.midtop[0] - txt_img.get_width() // 2)-scroll.x, self.rect.y-scroll.y))
+        if area.collidepoint((self.rect.midtop[0] - txt_img.get_width() // 2) - scroll.x, self.rect.y - scroll.y):
+            screen.blit(txt_img, ((self.rect.midtop[0] - txt_img.get_width() // 2) - scroll.x, self.rect.y - scroll.y))
 
 
+def draw(screen, img, x, y):
+    screen.blit(img, (x, y))
+
+
+class Button:
+
+    def __init__(self, img, x, y, min_size, frames=5):
+        """
+
+        :param img: pygame.Surface
+        :param min_size: minimum size of image to which it will be shrunk down (during animation)
+        :param frames: the number of frames to iterate over
+
+        the x and y coordinates are according to pygame coordinate system
+        """
+
+        self.img = img  # the original image which will be shrunk down for animations
+        self.w, self.h = img.get_size()  # width and height of original image
+        self.x = x  # x coordinate
+        self.y = y  # y coordinate
+        self.mw, self.mh = min_size  # width and height of smallest frame which will be drawn
+        self.frames = frames  # the number of frames over which the image will be animated
+
+        self.frame = 0  # internal variable to keep track of on which frame the animation is on
+        _, self.last_drawn_rect = self.resize_image(min_size)
+
+    def resize_image(self, size: tuple) -> (pygame.Surface, pygame.rect.Rect):
+        """
+        :param size: tuple - (width, height) of new size of image
+        :return: pygame.Surface and corresponding pygame rect object
+        """
+
+        n_w, n_h = size  # new width and height
+        dw = self.w - n_w  # change in width
+        dh = self.h - n_h  # change in height
+
+        img = pygame.transform.scale(self.img, size)  # resizing image according to size
+        rect = img.get_rect()  # making rect object
+        rect.topleft = self.x + (dw / 2), self.y + (dh / 2)  # setting correct x and y coordinates for the rect object
+
+        return img, rect
+
+    def draw(self, screen, mouse_rect):
+
+        if self.hover(mouse_rect):  # moving to next frame is hovered over last frame
+
+            if self.frame < self.frames:
+                self.frame += 1  # updating current frame
+
+        else:
+            if self.frame > 0:
+                self.frame -= 1  # updating current frame
+
+        w = ((self.w - self.mw) * self.frame) // self.frames + self.mw
+        h = ((self.h - self.mh) * self.frame) // self.frames + self.mh
+        img, rect = self.resize_image((w, h))
+        draw(screen, img, rect.x, rect.y)
+        self.last_drawn_rect = rect
+
+    def hover(self, mouse_rect):
+        return mouse_rect.colliderect(self.last_drawn_rect)
