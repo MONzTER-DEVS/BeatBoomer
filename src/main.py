@@ -1393,7 +1393,7 @@ def more_games_2():
     cg_data = games[cg_name]
 
     cg_image = cg_data["image_surface"]
-    cg_image = pygame.transform.scale(cg_image, (130, 130))
+    cg_image = pygame.transform.smoothscale(cg_image, (130, 130))
     cg_image_rect = cg_image.get_rect(center=(SW // 2, 0))
     cg_image_rect.top = 40
 
