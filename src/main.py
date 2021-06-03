@@ -1325,6 +1325,10 @@ def draw_rect_bounding_box(rect, screen):
     pygame.draw.rect(screen, (255, 0, 0), (*rect.topleft, rect.w, rect.h), 2)
 
 
+def distance(x1, x2, y1, y2):
+    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+
 def more_games_2():
     # FONTS
     font_dir = os.path.join("assets", "fonts", "Roboto")
@@ -1384,6 +1388,7 @@ def more_games_2():
     # arrow_left_rect.x = SW - 50
 
     cg_index = 0
+    cg_index_displayed = 0
     cg_name = game_names[cg_index]
     cg_data = games[cg_name]
 
@@ -1449,6 +1454,7 @@ def more_games_2():
                 cg_data = games[cg_name]
                 cg_image = cg_data["image_surface"]
                 cg_image = pygame.transform.scale(cg_image, (130, 130))
+                cg_index_displayed = cg_index
 
         # gui_scroll.y = clamp(gui_scroll.y, 0, labels[-1].rect.bottom // 2)
 
@@ -1491,9 +1497,28 @@ def more_games_2():
 
             if debug:
                 draw_rect_bounding_box(cg_image_rect, screen)
-                draw_rect_bounding_box(arrow_right_rect, screen)
-                draw_rect_bounding_box(arrow_left_rect, screen)
 
+            circle_surface = pygame.Surface((20 * games_count - 10, 10), pygame.SRCALPHA)
+            circle_s_rect = circle_surface.get_rect(center=(SW // 2, 180))
+
+            if mouse_rect.colliderect(circle_s_rect):
+                to_check = True
+                m_cs_x = (mx // 2) - circle_s_rect.x
+                m_cs_y = (my // 2) - circle_s_rect.y
+
+            else:
+                to_check = False
+
+            y = 0
+            for x in range(1, games_count * 3, 3):
+                if y == cg_index_displayed:
+                    pygame.draw.circle(circle_surface, (255, 255, 255), (x * 5, 5), 5)
+                else:
+                    pygame.draw.circle(circle_surface, (255, 255, 255), (x * 5, 5), 5, 1)
+
+                y += 1
+
+            screen.blit(circle_surface, circle_s_rect)
         # more games content end
 
         back_button.draw(
