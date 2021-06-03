@@ -4,6 +4,7 @@ import urllib.request
 import pygame
 from copy import deepcopy
 
+
 def get_image(image_url):
     r = requests.get(image_url)
     img = io.BytesIO(r.content)

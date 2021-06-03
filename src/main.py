@@ -1400,6 +1400,9 @@ def more_games_2():
     exiting = False
     games_count = len(games)
 
+    circle_surface = pygame.Surface(((20 * games_count) + 20 * (games_count - 1), 10), pygame.SRCALPHA)
+    circle_s_rect = circle_surface.get_rect(center=(SW // 2, 180))
+
     while True:
         m_cs_x, m_cs_y = 0, 0
         scroll.y += 5
@@ -1498,9 +1501,10 @@ def more_games_2():
 
             if debug:
                 draw_rect_bounding_box(cg_image_rect, screen)
+                draw_rect_bounding_box(circle_s_rect, screen)
 
             #  dots started
-            circle_surface = pygame.Surface((20 * games_count - 10, 10), pygame.SRCALPHA)
+            circle_surface = pygame.Surface(((15 * games_count) - 5, 10), pygame.SRCALPHA)
             circle_s_rect = circle_surface.get_rect(center=(SW // 2, 180))
 
             if mouse_rect.colliderect(circle_s_rect):
@@ -1580,7 +1584,7 @@ def more_games_2():
         pygame.display.update()
 
 
-scene = "more_games"
+scene = "menu"
 while True:
 
     if scene == "splash":
