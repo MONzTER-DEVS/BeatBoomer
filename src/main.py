@@ -1401,6 +1401,7 @@ def more_games_2():
     games_count = len(games)
 
     while True:
+        m_cs_x, m_cs_y = 0, 0
         scroll.y += 5
         screen.fill(back_color)
         mx, my = pygame.mouse.get_pos()
@@ -1498,6 +1499,7 @@ def more_games_2():
             if debug:
                 draw_rect_bounding_box(cg_image_rect, screen)
 
+            #  dots started
             circle_surface = pygame.Surface((20 * games_count - 10, 10), pygame.SRCALPHA)
             circle_s_rect = circle_surface.get_rect(center=(SW // 2, 180))
 
@@ -1509,16 +1511,35 @@ def more_games_2():
             else:
                 to_check = False
 
-            y = 0
-            for x in range(1, games_count * 3, 3):
-                if y == cg_index_displayed:
-                    pygame.draw.circle(circle_surface, (255, 255, 255), (x * 5, 5), 5)
-                else:
-                    pygame.draw.circle(circle_surface, (255, 255, 255), (x * 5, 5), 5, 1)
+            j = 0
 
-                y += 1
+            y = 5
+            for i in range(1, games_count * 3, 3):
+                x = i * 5
+
+                if j == cg_index_displayed:
+                    pygame.draw.circle(circle_surface, (255, 255, 255), (x, y), 5)
+                    j += 1
+                    continue
+
+                else:
+                    if distance(m_cs_x, x, m_cs_y, y) < 5:
+                        pygame.draw.circle(screen, (255, 255, 255), (x + circle_s_rect.x, y + circle_s_rect.y), 7, 1)
+
+                        if clicked:
+                            cg_index = j
+                            tr_close_start = True
+
+                        j += 1
+                        continue
+
+                    else:
+                        pygame.draw.circle(circle_surface, (255, 255, 255), (x, y), 5, 1)
+                        j += 1
 
             screen.blit(circle_surface, circle_s_rect)
+            #  dots ended
+
         # more games content end
 
         back_button.draw(

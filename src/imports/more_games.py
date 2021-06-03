@@ -12,11 +12,13 @@ def get_image(image_url):
 
 def get_more_games():
     data = requests.get("https://monzter-devs.github.io/MONzTER-DEVS.api/more_from_creator.json").json()
-    try:
-        del data["games"]["beat n boom"]
 
-    except:
-        pass
+    # try:
+    #     del data["games"]["beat n boom"]
+    #
+    # except:
+    #     pass
+
     games = deepcopy(data["games"])
 
     for game_name in games:
